@@ -10,6 +10,7 @@
 
 ## Development Principles
 
+- Follow the general engineering rules in `docs/development-guidelines.md` in addition to the repo-specific instructions below.
 - Prefer the smallest change that solves the requested problem.
 - Keep changes scoped to the affected module unless the task clearly requires cross-service updates.
 - Preserve existing request/response shapes, ports, service names, and discovery behavior unless the user asks for contract changes.
