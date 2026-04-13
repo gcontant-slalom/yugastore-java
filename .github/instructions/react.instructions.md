@@ -1,7 +1,7 @@
 ---
 description: "Use when editing the React frontend in react-ui/frontend. Covers the legacy React 16 JavaScript app, routing, axios usage, local CSS, and keeping frontend changes aligned with the API gateway."
 name: "React Frontend Guidance"
-applyTo: "**/*.js, **/*.css, **/package.json"s
+applyTo: "**/*.js, **/*.css, **/package.json"
 ---
 # React Frontend Guidance
 
