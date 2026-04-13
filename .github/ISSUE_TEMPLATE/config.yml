@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Workflow Rule
+    url: https://github.com/gcontant-slalom/yugastore-java/issues
+    about: Reserve path prefixes on every in-progress issue and avoid overlapping active ownership.
