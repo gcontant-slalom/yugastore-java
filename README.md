@@ -52,7 +52,7 @@ To build, simply run the following from the base directory:
 $ mvn -DskipTests package
 ```
 
-To run the app on host machine, you need to first install YugabyteDB, create the necessary tables, start each of the microservices and finally the React UI.
+To run the app locally, you need a YugabyteDB instance, the required schemas, the sample data, and then each of the microservices followed by the React UI.
 
 ## Running the app on host
 
@@ -62,11 +62,29 @@ Make sure you have built the app as described above. Now do the following steps.
 
 You can [install YugabyteDB by following these instructions](https://docs.yugabyte.com/latest/quick-start/).
 
+If you prefer to avoid a host install, you can run a single-node YugabyteDB container instead:
+
+```
+$ docker run -d --name yugastore-yb \
+	-p 7000:7000 -p 9000:9000 -p 9042:9042 -p 5433:5433 -p 15433:15433 \
+	yugabytedb/yugabyte:latest \
+	bin/yugabyted start --daemon=false
+```
+
+Once the container is up, the admin UI is available at [http://localhost:7000/](http://localhost:7000/).
+
 Now create the necessary tables as shown below. Note that these steps would take a few seconds.
 
 ```
 $ cd resources
 $ cqlsh -f schema.cql
+```
+
+If you are using Docker for YugabyteDB, initialize both the YCQL and YSQL schemas from the repo root as follows:
+
+```
+$ docker exec -i yugastore-yb ycqlsh -f - < resources/schema.cql
+$ docker exec -i yugastore-yb ysqlsh -h 127.0.0.1 -p 5433 -f - < resources/schema.sql
 ```
 
 From the repo root, you can also open the local YCQL shell with:
@@ -77,14 +95,47 @@ $ ./ycqlsh.sh
 
 This defaults to `127.0.0.1:9042` and the `cronos` keyspace, and accepts extra `ycqlsh` arguments such as `-e "DESCRIBE TABLES;"`.
 
-Next, load some sample data.
+With the Docker-based setup, you can open a shell inside the container instead:
+
+```
+$ docker exec -it yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos
+```
+
+Next, load some sample data. If you installed YugabyteDB directly on the host, the legacy loader script is:
 
 ```
 $ cd resources
 $ ./dataload.sh
 ```
 
-Create the postgres tables in `resources/schema.sql` for the YSQL tables.
+For current YugabyteDB Docker images, the more reliable path is to load the checked-in CSV files with `COPY` instead of the legacy `cassandra-loader` script.
+
+Copy the seed files into the container:
+
+```
+$ docker cp resources/cronos_products.csv yugastore-yb:/tmp/cronos_products.csv
+$ docker cp resources/cronos_product_rankings.csv yugastore-yb:/tmp/cronos_product_rankings.csv
+$ docker cp resources/cronos_product_inventory.csv yugastore-yb:/tmp/cronos_product_inventory.csv
+```
+
+Then seed the YCQL tables:
+
+```
+$ docker exec yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos -e "COPY products (asin, title, description, price, imurl, also_bought, also_viewed, bought_together, buy_after_viewing, brand, categories, num_reviews, num_stars, avg_stars) FROM '/tmp/cronos_products.csv';"
+$ docker exec yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos -e "COPY product_rankings (asin, category, sales_rank, title, price, imurl, num_reviews, num_stars, avg_stars) FROM '/tmp/cronos_product_rankings.csv';"
+$ docker exec yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos -e "COPY product_inventory (asin, quantity) FROM '/tmp/cronos_product_inventory.csv';"
+```
+
+You can verify that the seed completed by running a few sample queries:
+
+```
+$ docker exec yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos -e "SELECT asin, title, price FROM products LIMIT 5;"
+$ docker exec yugastore-yb ycqlsh 127.0.0.1 9042 -k cronos -e "SELECT * FROM product_rankings WHERE asin = '0000031909';"
+$ docker exec yugastore-yb sh -lc "ip=\$(hostname -i | awk '{print \$1}'); ycqlsh \"\$ip\" 9042 -k cronos -e \"SELECT * FROM product_rankings WHERE category = 'Toys & Games' LIMIT 10;\""
+$ docker exec yugastore-yb ysqlsh -h 127.0.0.1 -p 5433 -c "SELECT * FROM shopping_cart LIMIT 5;"
+```
+
+If you are using the Docker workflow above, the `ysqlsh` command already creates the YSQL tables defined in `resources/schema.sql`.
 
 ## Step 2: Start the Eureka service discovery (local)
 
@@ -148,7 +199,7 @@ Now browse to the marketplace app at [http://localhost:8080/](http://localhost:8
 # Running the app in docker containers
 
 The dockers images are built along with the binaries when `mvn -DskipTests package` was run.
-To run the docker containers, run the following script, after you have [Installed and initialized YugabyteDB](#step-1-install-and-initialize-yugabyte-db):
+To run the docker containers, run the following script after you have initialized YugabyteDB as described in [Step 1](#step-1-install-and-initialize-yugabyte-db):
 
 ```
 $ ./docker-run.sh
