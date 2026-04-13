@@ -68,6 +68,15 @@ Now create the necessary tables as shown below. Note that these steps would take
 $ cd resources
 $ cqlsh -f schema.cql
 ```
+
+From the repo root, you can also open the local YCQL shell with:
+
+```
+$ ./ycqlsh.sh
+```
+
+This defaults to `127.0.0.1:9042` and the `cronos` keyspace, and accepts extra `ycqlsh` arguments such as `-e "DESCRIBE TABLES;"`.
+
 Next, load some sample data.
 
 ```

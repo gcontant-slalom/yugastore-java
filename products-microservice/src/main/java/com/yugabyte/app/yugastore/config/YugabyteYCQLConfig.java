@@ -46,6 +46,11 @@ class YugabyteYCQLConfig {
     }
 
     @Override
+    protected String getLocalDataCenter() {
+      return "datacenter1";
+    }
+
+    @Override
     public SchemaAction getSchemaAction() {
       return SchemaAction.CREATE_IF_NOT_EXISTS;
     }
