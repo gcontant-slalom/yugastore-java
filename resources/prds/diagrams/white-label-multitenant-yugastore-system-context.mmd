@@ -1,0 +1,43 @@
+flowchart LR
+    USER[User]
+    TEAM[Delivery Team]
+
+    subgraph App[Auth-First Yugastore]
+        UI[React UI]
+        GW[API Gateway]
+        AUTH[Login Service]
+        PROD[Products Service]
+        CHECK[Checkout Service]
+        CART[Cart Service]
+    end
+
+    subgraph Data[Persistence]
+        YSQL[(YSQL: users, cart)]
+        YCQL[(YCQL: products, checkout)]
+    end
+
+    subgraph Planning[Repo-Local Planning]
+        PRD[Auth-First PRD]
+        AUTHSPEC[OpenSpec: merchant-auth-foundation]
+        NEXT[Downstream changes blocked until auth completes]
+    end
+
+    USER --> UI
+    UI --> GW
+    GW --> AUTH
+    GW --> PROD
+    GW --> CHECK
+    GW --> CART
+
+    AUTH --> YSQL
+    CART --> YSQL
+    PROD --> YCQL
+    CHECK --> YCQL
+
+    AUTH -. validates credentials, creates auth state .-> GW
+    GW -. resolves current authenticated user .-> CART
+    GW -. resolves current authenticated user .-> CHECK
+
+    TEAM --> PRD
+    PRD --> AUTHSPEC
+    AUTHSPEC --> NEXT
