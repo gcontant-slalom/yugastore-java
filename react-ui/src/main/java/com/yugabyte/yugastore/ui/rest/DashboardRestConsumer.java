@@ -2,7 +2,6 @@ package com.yugabyte.yugastore.ui.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpEntity;
@@ -23,6 +22,18 @@ import java.util.*;
 
 @Component
 public class DashboardRestConsumer {
+	private static final Set<String> PROXIED_RESPONSE_HEADERS_TO_DROP = new HashSet<>(Arrays.asList(
+			HttpHeaders.TRANSFER_ENCODING,
+			HttpHeaders.CONTENT_LENGTH,
+			HttpHeaders.CONNECTION,
+			"Keep-Alive",
+			HttpHeaders.TE,
+			HttpHeaders.TRAILER,
+			HttpHeaders.UPGRADE,
+			HttpHeaders.PROXY_AUTHENTICATE,
+			HttpHeaders.PROXY_AUTHORIZATION,
+			HttpHeaders.SET_COOKIE,
+			HttpHeaders.CONTENT_ENCODING));
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -37,8 +48,7 @@ public class DashboardRestConsumer {
 		String restURL = restUrlBase + "products?limit=" + limit + "&offset=" + offset;
 		ResponseEntity<String> rateResponse =
 		        restTemplate.exchange(restURL,
-		                    HttpMethod.GET, null, new ParameterizedTypeReference<String>() {
-		            });
+		                    HttpMethod.GET, null, String.class);
 		String productListJsonResponse = rateResponse.getBody();
 
 		JsonElement productListJsonArray =
@@ -52,8 +62,7 @@ public class DashboardRestConsumer {
 		System.out.println(restURL);
 		ResponseEntity<String> rateResponse =
 		        restTemplate.exchange(restURL,
-		                    HttpMethod.GET, null, new ParameterizedTypeReference<String>() {
-		            });
+		                    HttpMethod.GET, null, String.class);
 		String productListJsonResponse = rateResponse.getBody();
 
 		JsonElement productListJsonArray =
@@ -70,7 +79,7 @@ public class DashboardRestConsumer {
 		ResponseEntity<String> rateResponse =
 		  restTemplate.exchange(
 		  	restURL,
-				HttpMethod.GET, null, new ParameterizedTypeReference<String>() {});
+				HttpMethod.GET, null, String.class);
 		String productDetailsJsonResponse = rateResponse.getBody();
 		return productDetailsJsonResponse;
 	}	
@@ -164,13 +173,30 @@ public class DashboardRestConsumer {
 		return headers;
 	}
 
-	private <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> request) {
+	private ResponseEntity<String> exchange(String url, HttpMethod method, HttpEntity<?> request) {
 		try {
-			return restTemplate.exchange(url, method, request, new ParameterizedTypeReference<T>() {
-			});
+			ResponseEntity<String> response = restTemplate.exchange(url, method, request, String.class);
+			return ResponseEntity.status(response.getStatusCode())
+					.headers(sanitizeHeaders(response.getHeaders()))
+					.body(response.getBody());
 		} catch (HttpStatusCodeException ex) {
-			return ResponseEntity.status(ex.getStatusCode()).headers(ex.getResponseHeaders())
-					.body((T) ex.getResponseBodyAsString());
+			return ResponseEntity.status(ex.getStatusCode()).headers(sanitizeHeaders(ex.getResponseHeaders()))
+					.body(ex.getResponseBodyAsString());
 		}
+	}
+
+	private HttpHeaders sanitizeHeaders(HttpHeaders sourceHeaders) {
+		HttpHeaders sanitizedHeaders = new HttpHeaders();
+		if (sourceHeaders == null) {
+			return sanitizedHeaders;
+		}
+
+		sourceHeaders.forEach((headerName, headerValues) -> {
+			if (!PROXIED_RESPONSE_HEADERS_TO_DROP.contains(headerName)) {
+				sanitizedHeaders.put(headerName, new ArrayList<>(headerValues));
+			}
+		});
+
+		return sanitizedHeaders;
 	}
 }
