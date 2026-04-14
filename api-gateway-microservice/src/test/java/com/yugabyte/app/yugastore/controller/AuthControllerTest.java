@@ -9,15 +9,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yugabyte.app.yugastore.domain.AuthErrorResponse;
 import com.yugabyte.app.yugastore.domain.AuthLoginRequest;
 import com.yugabyte.app.yugastore.domain.AuthRegistrationRequest;
 import com.yugabyte.app.yugastore.domain.AuthUser;
+import com.yugabyte.app.yugastore.service.AuthProxyException;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -32,7 +35,9 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authServiceRest)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authServiceRest))
+                .setControllerAdvice(new AuthExceptionHandler())
+                .build();
         objectMapper = new ObjectMapper();
     }
 
@@ -94,5 +99,26 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void register_returnsStructuredValidationErrors() throws Exception {
+        AuthRegistrationRequest request = new AuthRegistrationRequest();
+        request.setEmail("merchant@example.com");
+        request.setPassword("test123");
+        request.setPasswordConfirm("test123");
+
+        AuthErrorResponse errorResponse = new AuthErrorResponse();
+        errorResponse.setMessage("Registration request rejected.");
+        errorResponse.getFieldErrors().put("password", "Try one with at least 8 characters.");
+        when(authServiceRest.register(any(AuthRegistrationRequest.class)))
+                .thenThrow(new AuthProxyException(HttpStatus.BAD_REQUEST, errorResponse, null));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Registration request rejected."))
+                .andExpect(jsonPath("$.fieldErrors.password").value("Try one with at least 8 characters."));
     }
 }

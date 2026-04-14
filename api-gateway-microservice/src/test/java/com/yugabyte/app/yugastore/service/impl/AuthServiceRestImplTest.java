@@ -6,13 +6,21 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yugabyte.app.yugastore.service.AuthProxyException;
 import com.yugabyte.app.yugastore.domain.AuthLoginRequest;
 import com.yugabyte.app.yugastore.domain.AuthRegistrationRequest;
 import com.yugabyte.app.yugastore.domain.AuthUser;
 import com.yugabyte.app.yugastore.rest.clients.AuthRestClient;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.http.HttpStatus;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -92,4 +100,38 @@ class AuthServiceRestImplTest {
                 .hasMessageContaining("No authenticated user.");
         verify(authRestClient).login(request);
     }
+
+        @Test
+        void register_preservesValidationErrorsFromDownstreamService() {
+        AuthRegistrationRequest request = new AuthRegistrationRequest();
+        request.setEmail("merchant@example.com");
+        request.setPassword("test123");
+        request.setPasswordConfirm("test123");
+
+        Request feignRequest = Request.create(Request.HttpMethod.POST,
+            "http://login-microservice/api/v1/auth/register",
+            Collections.emptyMap(),
+            null,
+            new RequestTemplate());
+        Response feignResponse = Response.builder()
+            .status(400)
+            .reason("Bad Request")
+            .request(feignRequest)
+            .body("{\"message\":\"Registration request rejected.\",\"fieldErrors\":{\"password\":\"Try one with at least 8 characters.\"}}",
+                StandardCharsets.UTF_8)
+            .build();
+        when(authRestClient.register(request))
+            .thenThrow(FeignException.errorStatus("AuthRestClient#register", feignResponse));
+
+        assertThatThrownBy(() -> service.register(request))
+            .isInstanceOf(AuthProxyException.class)
+            .satisfies(ex -> {
+                AuthProxyException authProxyException = (AuthProxyException) ex;
+                assertThat(authProxyException.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                assertThat(authProxyException.getErrorResponse().getMessage())
+                    .isEqualTo("Registration request rejected.");
+                assertThat(authProxyException.getErrorResponse().getFieldErrors())
+                    .containsEntry("password", "Try one with at least 8 characters.");
+            });
+        }
 }
