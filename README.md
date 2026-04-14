@@ -33,6 +33,64 @@ The architecture diagram of Yugastore is shown below.
 
 ![Architecture of microservices based retail marketplace app](yugastore-java-architecture.png)
 
+## AI Delivery Workflow
+
+This repository uses a lightweight AI-driven delivery workflow that turns raw source material into structured execution artifacts before implementation begins.
+
+```mermaid
+flowchart LR
+	subgraph A[Inputs / Discovery]
+		D1[Docs]
+		D2[Notes]
+		D3[Transcripts]
+		D4[Screenshots / Images]
+		D5[Raw project input]
+		D1 --> D5
+		D2 --> D5
+		D3 --> D5
+		D4 --> D5
+	end
+
+	subgraph B[Structuring / Clarification]
+		B1[PRD agent + skills]
+		B2[Clarify gaps]
+		B3[Refined input]
+		D5 --> B1
+		B1 --> B2
+		B2 --> B3
+		B3 --> B1
+	end
+
+	subgraph C[Product / Specification]
+		C1[PRD]
+		C2[OpenSpec change]
+		C3[Proposal + Specs + Design + Tasks]
+		B1 --> C1
+		C1 --> C2
+		C2 --> C3
+	end
+
+	subgraph D[Delivery / Execution]
+		D6[GitHub issues]
+		D7[Copilot + agents]
+		D8[Code changes + PRs]
+		C3 --> D6
+		D6 --> D7
+		C3 --> D7
+		D7 --> D8
+	end
+
+	subgraph E[Feedback / Iteration]
+		E1[Review + new learnings]
+		E2[Update spec or plan]
+		D8 --> E1
+		E1 --> E2
+		E2 --> C2
+		E2 --> C1
+		E1 --> B2
+	end
+```
+
 
 | Microservice         | YugabyteDB API | Default host:port | Description           |
 | -------------------- | ---------------- | ---------------- | --------------------- |
