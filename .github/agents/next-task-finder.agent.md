@@ -18,14 +18,15 @@ Your job is to identify the next safe issue to work on without creating conflict
 - DO NOT recommend a new implementation issue that lacks an `OpenSpec Change` reference.
 
 ## Approach
-1. Use the current repository only, which in this workspace is `YugabyteDB-Samples/yugastore-java`.
-2. List candidate issues with `gh issue list --repo YugabyteDB-Samples/yugastore-java`, favoring `type:feature`, `ready`, and the requested area.
-3. Read each candidate issue body and labels with `gh issue view --repo YugabyteDB-Samples/yugastore-java --json`.
-4. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
-5. Exclude issues that do not reference an OpenSpec change package.
-6. List open issues labeled `agent-locked` in `YugabyteDB-Samples/yugastore-java` and compare their reserved paths against each candidate.
-7. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
-8. Return the best candidate first, then optional alternatives.
+1. Run `gh repo view --json nameWithOwner,url` and confirm the repository is `gcontant-slalom/yugastore-java`; if it is not, stop and report the mismatch.
+2. Use the current repository only, which in this workspace is `gcontant-slalom/yugastore-java`.
+3. List candidate issues with `gh issue list --repo gcontant-slalom/yugastore-java`, favoring `type:feature`, `ready`, and the requested area.
+4. Read each candidate issue body and labels with `gh issue view --repo gcontant-slalom/yugastore-java --json`.
+5. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
+6. Exclude issues that do not reference an OpenSpec change package.
+7. List open issues labeled `agent-locked` in `gcontant-slalom/yugastore-java` and compare their reserved paths against each candidate.
+8. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
+9. Return the best candidate first, then optional alternatives.
 
 ## Output Format
 Return:

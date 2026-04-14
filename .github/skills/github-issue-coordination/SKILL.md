@@ -45,11 +45,12 @@ For new issues in this repository, the issue should reference its backing OpenSp
 Use the repository ownership map in [path ownership](./references/path-ownership.md) as the default split when issues do not already specify a narrower reservation.
 
 ## Recommended Commands
-- `gh issue list --repo YugabyteDB-Samples/yugastore-java --label ready`
-- `gh issue list --repo YugabyteDB-Samples/yugastore-java --label agent-locked --state open`
-- `gh issue view <number> --repo YugabyteDB-Samples/yugastore-java --json number,title,body,labels,assignees,url,state`
-- `gh issue edit <number> --repo YugabyteDB-Samples/yugastore-java --add-assignee <login> --add-label agent-locked`
-- `gh issue comment <number> --repo YugabyteDB-Samples/yugastore-java --body-file <file>`
+- `gh repo view --json nameWithOwner,url` and confirm `gcontant-slalom/yugastore-java`
+- `gh issue list --repo gcontant-slalom/yugastore-java --label ready`
+- `gh issue list --repo gcontant-slalom/yugastore-java --label agent-locked --state open`
+- `gh issue view <number> --repo gcontant-slalom/yugastore-java --json number,title,body,labels,assignees,url,state`
+- `gh issue edit <number> --repo gcontant-slalom/yugastore-java --add-assignee <login> --add-label agent-locked`
+- `gh issue comment <number> --repo gcontant-slalom/yugastore-java --body-file <file>`
 
 
 ## Custom Agents
