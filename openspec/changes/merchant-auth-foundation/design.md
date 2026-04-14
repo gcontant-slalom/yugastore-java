@@ -61,6 +61,19 @@ Recommended decision: finish this change before resuming tenant context, company
 - Alternative considered: plan auth and tenant work in parallel as equal priorities.
 - Rejected because the repo already shows that missing auth causes contradictory and incomplete behavior.
 
+### 6. Use a gateway-owned session contract for the browser
+
+Recommended decision: define the browser-facing auth contract at the API gateway using a session-backed current user, while the login service remains the credential authority for registration and login validation.
+
+- External contract:
+	- `POST /api/v1/auth/register` creates an account and returns `{ userId, email }` with `201 Created`
+	- `POST /api/v1/auth/login` validates credentials, stores the authenticated user in the gateway session, and returns `{ userId, email }`
+	- `POST /api/v1/auth/logout` clears the gateway session and returns `204 No Content`
+	- `GET /api/v1/auth/current-user` returns `{ userId, email }` for the current browser session or `401 Unauthorized`
+- Why: this keeps the React app talking to one backend boundary and avoids leaking login-service session behavior directly into the browser contract.
+- Alternative considered: preserve form-login state in the login service and have the UI interact with it directly.
+- Rejected because it splits the browser contract across multiple services and does not fit the existing gateway entrypoint.
+
 ## Risks / Trade-offs
 
 - [Legacy username model complicates migration] -> Keep email as the public contract and document any temporary compatibility mapping clearly.

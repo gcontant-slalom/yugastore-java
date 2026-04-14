@@ -36,8 +36,8 @@ class UserValidatorTest {
 
     @Test
     void validate_withValidUser_hasNoErrors() {
-        User user = buildUser("johndoe", "password123", "password123");
-        when(userService.findByUsername("johndoe")).thenReturn(null);
+        User user = buildUser("johndoe@example.com", "password123", "password123");
+        when(userService.findByEmail("johndoe@example.com")).thenReturn(null);
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
@@ -46,45 +46,45 @@ class UserValidatorTest {
     }
 
     @Test
-    void validate_withEmptyUsername_rejectsField() {
+    void validate_withEmptyEmail_rejectsField() {
         User user = buildUser("", "password123", "password123");
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
 
-        assertThat(errors.getFieldError("username")).isNotNull();
+        assertThat(errors.getFieldError("email")).isNotNull();
     }
 
     @Test
-    void validate_withTooShortUsername_rejectsField() {
+    void validate_withInvalidEmail_rejectsField() {
         User user = buildUser("abc", "password123", "password123");
-        when(userService.findByUsername("abc")).thenReturn(null);
+        when(userService.findByEmail("abc")).thenReturn(null);
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
 
-        assertThat(errors.getFieldError("username")).isNotNull();
-        assertThat(errors.getFieldError("username").getCode()).isEqualTo("Size.userForm.username");
+        assertThat(errors.getFieldError("email")).isNotNull();
+        assertThat(errors.getFieldError("email").getCode()).isEqualTo("Format.userForm.email");
     }
 
     @Test
-    void validate_withDuplicateUsername_rejectsField() {
+    void validate_withDuplicateEmail_rejectsField() {
         User existing = new User();
-        existing.setUsername("johndoe");
-        User user = buildUser("johndoe", "password123", "password123");
-        when(userService.findByUsername("johndoe")).thenReturn(existing);
+        existing.setEmail("johndoe@example.com");
+        User user = buildUser("johndoe@example.com", "password123", "password123");
+        when(userService.findByEmail("johndoe@example.com")).thenReturn(existing);
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
 
-        assertThat(errors.getFieldError("username")).isNotNull();
-        assertThat(errors.getFieldError("username").getCode()).isEqualTo("Duplicate.userForm.username");
+        assertThat(errors.getFieldError("email")).isNotNull();
+        assertThat(errors.getFieldError("email").getCode()).isEqualTo("Duplicate.userForm.email");
     }
 
     @Test
     void validate_withShortPassword_rejectsField() {
-        User user = buildUser("johndoe", "short", "short");
-        when(userService.findByUsername("johndoe")).thenReturn(null);
+        User user = buildUser("johndoe@example.com", "short", "short");
+        when(userService.findByEmail("johndoe@example.com")).thenReturn(null);
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
@@ -95,8 +95,8 @@ class UserValidatorTest {
 
     @Test
     void validate_withMismatchedPasswords_rejectsConfirmField() {
-        User user = buildUser("johndoe", "password123", "differentPass");
-        when(userService.findByUsername("johndoe")).thenReturn(null);
+        User user = buildUser("johndoe@example.com", "password123", "differentPass");
+        when(userService.findByEmail("johndoe@example.com")).thenReturn(null);
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
@@ -108,7 +108,7 @@ class UserValidatorTest {
 
     @Test
     void validate_withEmptyPassword_rejectsField() {
-        User user = buildUser("johndoe", "", "");
+        User user = buildUser("johndoe@example.com", "", "");
 
         Errors errors = new BeanPropertyBindingResult(user, "user");
         userValidator.validate(user, errors);
@@ -116,9 +116,9 @@ class UserValidatorTest {
         assertThat(errors.getFieldError("password")).isNotNull();
     }
 
-    private User buildUser(String username, String password, String passwordConfirm) {
+    private User buildUser(String email, String password, String passwordConfirm) {
         User user = new User();
-        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(password);
         user.setPasswordConfirm(passwordConfirm);
         return user;

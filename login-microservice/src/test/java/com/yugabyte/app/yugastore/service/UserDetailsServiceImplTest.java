@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import java.util.Set;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.yugabyte.app.yugastore.model.Role;
 import com.yugabyte.app.yugastore.model.User;
 import com.yugabyte.app.yugastore.repo.UserRepository;
 
@@ -32,29 +29,25 @@ class UserDetailsServiceImplTest {
     }
 
     @Test
-    void loadUserByUsername_returnsUserDetails_withGrantedAuthorities() {
-        Role role = new Role();
-        role.setName("ROLE_USER");
-
+    void loadUserByUsername_returnsUserDetails_forEmailLookup() {
         User user = new User();
         user.setUsername("johndoe");
+        user.setEmail("john@example.com");
         user.setPassword("encoded-password");
-        user.setRoles(Set.of(role));
 
-        when(userRepository.findByUsername("johndoe")).thenReturn(user);
+        when(userRepository.findByUsernameOrEmail("john@example.com", "john@example.com"))
+            .thenReturn(user);
 
-        UserDetails result = userDetailsService.loadUserByUsername("johndoe");
+        UserDetails result = userDetailsService.loadUserByUsername("john@example.com");
 
-        assertThat(result.getUsername()).isEqualTo("johndoe");
+        assertThat(result.getUsername()).isEqualTo("john@example.com");
         assertThat(result.getPassword()).isEqualTo("encoded-password");
-        assertThat(result.getAuthorities())
-                .extracting(a -> a.getAuthority())
-                .containsExactly("ROLE_USER");
+    assertThat(result.getAuthorities()).isEmpty();
     }
 
     @Test
     void loadUserByUsername_throwsUsernameNotFoundException_whenUserNotFound() {
-        when(userRepository.findByUsername("ghost")).thenReturn(null);
+        when(userRepository.findByUsernameOrEmail("ghost", "ghost")).thenReturn(null);
 
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("ghost"))
                 .isInstanceOf(UsernameNotFoundException.class)
@@ -62,23 +55,16 @@ class UserDetailsServiceImplTest {
     }
 
     @Test
-    void loadUserByUsername_withMultipleRoles_includesAllAuthorities() {
-        Role roleUser = new Role();
-        roleUser.setName("ROLE_USER");
-        Role roleAdmin = new Role();
-        roleAdmin.setName("ROLE_ADMIN");
-
+    void loadUserByUsername_supportsLegacyUsernameLookup() {
         User user = new User();
         user.setUsername("admin");
+        user.setEmail("admin@example.com");
         user.setPassword("pass");
-        user.setRoles(Set.of(roleUser, roleAdmin));
 
-        when(userRepository.findByUsername("admin")).thenReturn(user);
+        when(userRepository.findByUsernameOrEmail("admin", "admin")).thenReturn(user);
 
         UserDetails result = userDetailsService.loadUserByUsername("admin");
 
-        assertThat(result.getAuthorities()).hasSize(2)
-                .extracting(a -> a.getAuthority())
-                .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
+        assertThat(result.getUsername()).isEqualTo("admin@example.com");
     }
 }

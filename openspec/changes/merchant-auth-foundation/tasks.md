@@ -1,7 +1,7 @@
 ## 1. Auth Contract and Data Model
 
-- [ ] 1.1 Define the gateway-facing auth contract for register, login, logout, and any required current-user lookup behavior.
-- [ ] 1.2 Update the YSQL-backed user model and schema to support unique email-based accounts and secure password hashes for the first auth slice.
+- [x] 1.1 Define the gateway-facing auth contract for register, login, logout, and any required current-user lookup behavior.
+- [x] 1.2 Update the YSQL-backed user model and schema to support unique email-based accounts and secure password hashes for the first auth slice.
 
 ## 2. Backend Authentication Implementation
 
