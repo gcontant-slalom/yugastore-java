@@ -48,6 +48,15 @@
 - Prefer the custom `Next Task Finder` agent to select the next safe issue and the custom `Issue Locker` agent to claim and lock an issue before implementation starts.
 - If the planned change expands beyond the reserved paths, stop and ask for a new issue or a coordination decision instead of continuing.
 
+## PRD Generation Workflow
+
+- When the user asks to create a PRD from transcripts, screenshots, whiteboard photos, or raw documentation, prefer the custom `PRD From Docs` agent.
+- Save generated PRDs under `resources/prds/`.
+- When architectural documentation is present, convert it into Mermaid diagrams under `resources/prds/diagrams/` and reference those files from the PRD.
+- Before generating any GitHub issue output from a PRD, inspect `.github/ISSUE_TEMPLATE/`, run `gh issue list`, and inspect representative issues with `gh issue view` so the issue structure matches the repository's existing conventions.
+- Reuse only existing GitHub labels unless the user explicitly asks to change the taxonomy.
+- If the source material is ambiguous, stop and ask clarifying questions rather than guessing at requirements or issue scope.
+
 ## Local Environment Notes
 
 - Use Java 17 or newer.
