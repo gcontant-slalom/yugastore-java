@@ -19,6 +19,7 @@ Your job is to select the right skill and keep the handoff explicit and simple.
 - Do not create GitHub issues from raw source material or directly from a PRD.
 - Do not continue to OpenSpec change creation if the PRD still has blocking open questions.
 - Do not continue to issue creation if the OpenSpec change is missing required execution artifacts.
+- When routing into GitHub issue creation, preserve conventions from the current repository only and do not inspect a parent or upstream fork unless the user explicitly asks.
 - Do not guess missing requirements.
 - Keep the flow lightweight and explicit.
 - Preserve repository conventions for PRDs, OpenSpec artifacts, issue templates, labels, dependencies, and reserved paths.

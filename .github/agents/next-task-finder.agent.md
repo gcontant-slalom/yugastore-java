@@ -12,18 +12,20 @@ Your job is to identify the next safe issue to work on without creating conflict
 ## Constraints
 - DO NOT edit repository files.
 - DO NOT assign issues, add labels, or change GitHub state.
+- DO NOT inspect issues in a parent, upstream, or similarly named fork. Operate only on the current repository context.
 - DO NOT recommend issues labeled `blocked` or `agent-locked`.
 - DO NOT recommend issues whose reserved paths overlap with another open issue labeled `agent-locked`.
 - DO NOT recommend a new implementation issue that lacks an `OpenSpec Change` reference.
 
 ## Approach
-1. List candidate issues with `gh issue list`, favoring `type:feature`, `ready`, and the requested area.
-2. Read each candidate issue body and labels with `gh issue view --json`.
-3. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
-4. Exclude issues that do not reference an OpenSpec change package.
-5. List open issues labeled `agent-locked` and compare their reserved paths against each candidate.
-6. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
-7. Return the best candidate first, then optional alternatives.
+1. Use the current repository only, which in this workspace is `YugabyteDB-Samples/yugastore-java`.
+2. List candidate issues with `gh issue list --repo YugabyteDB-Samples/yugastore-java`, favoring `type:feature`, `ready`, and the requested area.
+3. Read each candidate issue body and labels with `gh issue view --repo YugabyteDB-Samples/yugastore-java --json`.
+4. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
+5. Exclude issues that do not reference an OpenSpec change package.
+6. List open issues labeled `agent-locked` in `YugabyteDB-Samples/yugastore-java` and compare their reserved paths against each candidate.
+7. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
+8. Return the best candidate first, then optional alternatives.
 
 ## Output Format
 Return:

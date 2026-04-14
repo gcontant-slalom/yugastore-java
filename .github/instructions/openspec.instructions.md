@@ -6,6 +6,7 @@ applyTo: "openspec/**/*.md"
 # OpenSpec Guidance
 
 - Use OpenSpec as the execution spec layer between PRDs and GitHub issues.
+- When OpenSpec work leads to GitHub issue generation or issue review, use only the current repository's issues, labels, and templates. Do not infer conventions from a parent or upstream fork.
 - Treat `resources/prds/*.md` as product intent and `openspec/changes/*` as implementation-ready change contracts.
 - Keep change packages bounded. Prefer one OpenSpec change per deployable slice or tightly coupled cross-service change.
 - Ask clarifying questions instead of guessing when requirements, dependencies, or ownership are unclear.

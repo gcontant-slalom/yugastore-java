@@ -29,4 +29,4 @@ The current labels support:
 - cross-cutting work with `cross-service`
 
 ## Live Validation Rule
-Before creating issues, always validate conventions again against live GitHub using `gh issue list`, `gh issue view`, and `gh label list`.
+Before creating issues, always validate conventions again against live GitHub using `gh issue list`, `gh issue view`, and `gh label list` against the current repository only, not a parent or upstream fork.

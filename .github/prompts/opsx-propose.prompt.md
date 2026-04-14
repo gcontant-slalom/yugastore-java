@@ -111,4 +111,5 @@ After completing all artifacts, summarize:
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
 - When working from a PRD, reference the PRD path in the resulting proposal instead of copying long background sections
+- If follow-up work needs GitHub issue conventions or issue generation, use only this repository's issues, labels, and templates, not a parent or upstream fork
 
