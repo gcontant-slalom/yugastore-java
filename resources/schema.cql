@@ -17,7 +17,7 @@ CREATE TABLE cronos.products (
     brand text,
     categories set<text>,
     num_reviews int,
-    num_stars int,
+    num_stars double,
     avg_stars double
 ) WITH default_time_to_live = 0
     AND transactions = {'enabled': 'false'};
@@ -37,7 +37,7 @@ CREATE TABLE cronos.product_rankings (
     price double,
     imurl text,
     num_reviews int,
-    num_stars int,
+    num_stars double,
     avg_stars double,
     PRIMARY KEY (asin, category)
 ) WITH CLUSTERING ORDER BY (category ASC)
