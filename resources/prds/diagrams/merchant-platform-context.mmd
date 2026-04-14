@@ -1,0 +1,25 @@
+flowchart LR
+    Shopper[Shopper Browser]
+    Merchant[Merchant Browser]
+    ReactUI[React UI]
+    Gateway[API Gateway]
+    Login[login-microservice]
+    Products[products-microservice]
+    Checkout[checkout-microservice]
+    Cart[cart-microservice]
+    Seed[resources seed assets]
+
+    Shopper --> ReactUI
+    Merchant --> ReactUI
+    ReactUI --> Gateway
+    Gateway --> Login
+    Gateway --> Products
+    Gateway --> Checkout
+    Gateway --> Cart
+    Seed --> Products
+    Seed --> Checkout
+
+    Login -. user identity .-> Gateway
+    Gateway -. tenant context .-> Products
+    Gateway -. tenant context .-> Checkout
+    Gateway -. tenant context .-> Cart

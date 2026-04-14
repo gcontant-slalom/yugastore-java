@@ -1,8 +1,8 @@
 ## Why
 
-Yugastore cannot support real user access today because authentication is stubbed across the brownfield stack. The transcript explicitly calls out fixing login first, and the current codebase confirms that registration, login, logout, frontend auth state, gateway enforcement, and hard-coded demo-user behavior are incomplete or inconsistent.
+Yugastore cannot support real user access today because authentication is stubbed across the brownfield stack. The requirements transcript explicitly calls out fixing login first, and the current codebase confirms that registration, login, logout, frontend auth state, gateway enforcement, and hard-coded demo-user behavior are incomplete or inconsistent.
 
-Derived from [resources/prds/white-label-multitenant-yugastore.md](resources/prds/white-label-multitenant-yugastore.md).
+Derived from [resources/prds/merchant-auth-foundation.md](resources/prds/merchant-auth-foundation.md).
 
 ## What Changes
 

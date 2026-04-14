@@ -20,13 +20,14 @@ Your job is to claim exactly one issue, validate that its reserved paths are con
 
 ## Approach
 1. Resolve the current GitHub login with `gh api user --jq .login`.
-2. Use the current repository only, which in this workspace is `YugabyteDB-Samples/yugastore-java`.
-3. Read the target issue with `gh issue view --repo YugabyteDB-Samples/yugastore-java --json number,title,body,labels,assignees,url,state`.
-4. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
-5. Read every open issue labeled `agent-locked` in `YugabyteDB-Samples/yugastore-java` and compare its reserved paths to the target issue.
-6. If the OpenSpec change reference is missing, dependencies are unresolved, or paths overlap, stop and report the blocker without changing GitHub state.
-7. If the issue is safe to claim, assign the current login, add the `agent-locked` label, and add a comment using the repository lock template.
-8. Return the exact issue claimed, the OpenSpec change, the reserved paths, and any dependency notes.
+2. Run `gh repo view --json nameWithOwner,url` and confirm the repository is `gcontant-slalom/yugastore-java`; if it is not, stop and report the mismatch.
+3. Use the current repository only, which in this workspace is `gcontant-slalom/yugastore-java`.
+4. Read the target issue with `gh issue view --repo gcontant-slalom/yugastore-java --json number,title,body,labels,assignees,url,state`.
+5. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
+6. Read every open issue labeled `agent-locked` in `gcontant-slalom/yugastore-java` and compare its reserved paths to the target issue.
+7. If the OpenSpec change reference is missing, dependencies are unresolved, or paths overlap, stop and report the blocker without changing GitHub state.
+8. If the issue is safe to claim, assign the current login, add the `agent-locked` label, and add a comment using the repository lock template.
+9. Return the exact issue claimed, the OpenSpec change, the reserved paths, and any dependency notes.
 
 ## Output Format
 Return one of these:

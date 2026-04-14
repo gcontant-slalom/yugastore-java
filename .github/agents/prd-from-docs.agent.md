@@ -20,6 +20,8 @@ Your job is to select the right skill and keep the handoff explicit and simple.
 - Do not continue to OpenSpec change creation if the PRD still has blocking open questions.
 - Do not continue to issue creation if the OpenSpec change is missing required execution artifacts.
 - When routing into GitHub issue creation, preserve conventions from the current repository only and do not inspect a parent or upstream fork unless the user explicitly asks.
+- Before handing off to GitHub issue creation, run `gh repo view --json nameWithOwner,url` and confirm the repository is `gcontant-slalom/yugastore-java`; if it is not, stop and report the mismatch.
+- If a GitHub command in the handoff must include `--repo`, it must use `gcontant-slalom/yugastore-java`.
 - Do not guess missing requirements.
 - Keep the flow lightweight and explicit.
 - Preserve repository conventions for PRDs, OpenSpec artifacts, issue templates, labels, dependencies, and reserved paths.

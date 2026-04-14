@@ -43,7 +43,8 @@
 ## GitHub Issue Coordination
 
 - For issue-driven work, only select tasks from GitHub Issues instead of starting ad hoc code changes.
-- When inspecting issues, labels, templates, or PRs for workflow decisions, use only the current repository context, not a parent, upstream, or similarly named fork. In this workspace that repository is `YugabyteDB-Samples/yugastore-java`.
+- When inspecting issues, labels, templates, or PRs for workflow decisions, use only the current repository context, not a parent, upstream, or similarly named fork. In this workspace that repository is `gcontant-slalom/yugastore-java`.
+- For GitHub issue, label, and PR commands, prefer running from the repository root without `--repo`; if a command must pass `--repo`, it must use `gcontant-slalom/yugastore-java`.
 - For new implementation work, use the OpenSpec change package referenced by the issue as the primary execution context.
 - If an issue lacks an OpenSpec change reference, stop and create or update the backing OpenSpec change before coding.
 - Before editing code for a GitHub issue, confirm the issue declares reserved paths and does not conflict with another open issue labeled `agent-locked`.

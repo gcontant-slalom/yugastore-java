@@ -4,23 +4,29 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 - [ ] 0.1 Confirm `merchant-auth-foundation` is complete and define how authenticated user identity maps into the tenant-context contract.
 
-## 1. Tenant Context Contract
+## 1. Merchant Onboarding Contract
 
-- [ ] 1.1 Define the merchant company, store, and request-context contract for the first slice and map current demo data to a default merchant context.
-- [ ] 1.2 Identify the targeted request path and replace remaining hard-coded demo-user assumptions with auth-derived tenant context.
+- [ ] 1.1 Define the merchant company signup route, minimum onboarding fields, and first-slice tenant creation contract.
+- [ ] 1.2 Decide whether the first merchant-admin user is created in the same flow or as an immediate follow-up and document the resulting contract.
 
-## 2. Persistence Foundation
+## 2. Tenant Context Contract
 
-- [ ] 2.1 Update YCQL schema and sample-data assets under `resources/` for tenant ownership fields needed by `products-microservice` and `checkout-microservice`.
-- [ ] 2.2 Update any required YSQL-backed model or contract definitions without inventing a full auth flow in `login-microservice`.
+- [ ] 2.1 Define the merchant company, store, and request-context contract for the first slice and map current demo data to a default merchant context.
+- [ ] 2.2 Add path-based tenant routing for the local demo flow in `react-ui` and `api-gateway-microservice`.
+- [ ] 2.3 Identify the targeted request path and replace remaining hard-coded demo-user assumptions with auth-derived tenant context.
 
-## 3. Service Propagation
+## 3. Persistence Foundation
 
-- [ ] 3.1 Implement tenant-context propagation from `api-gateway-microservice` to `products-microservice` for the first bounded flow.
-- [ ] 3.2 Implement tenant-context propagation to `checkout-microservice` and persist ownership on targeted writes.
-- [ ] 3.3 Add explicit missing-context rejection behavior for merchant-owned endpoints touched by this change.
+- [ ] 3.1 Update YCQL schema and sample-data assets under `resources/` for tenant ownership fields needed by `products-microservice` and `checkout-microservice`.
+- [ ] 3.2 Update any required YSQL-backed model or contract definitions without inventing a full auth flow in `login-microservice`.
 
-## 4. Verification
+## 4. Service Propagation
 
-- [ ] 4.1 Add focused tests for tenant-context propagation and ownership persistence in the touched modules.
-- [ ] 4.2 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.
+- [ ] 4.1 Implement tenant-context propagation from `api-gateway-microservice` to `products-microservice` for the first bounded flow.
+- [ ] 4.2 Implement tenant-context propagation to `checkout-microservice` and persist ownership on targeted writes.
+- [ ] 4.3 Add explicit missing-context rejection behavior for merchant-owned endpoints touched by this change.
+
+## 5. Verification
+
+- [ ] 5.1 Add focused tests for merchant onboarding routing, tenant-context propagation, and ownership persistence in the touched modules.
+- [ ] 5.2 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.
