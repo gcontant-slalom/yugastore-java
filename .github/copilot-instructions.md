@@ -40,6 +40,14 @@
 - Do not create commits, branches, or rewrite history unless explicitly asked.
 - Mention any untested areas, service dependencies, or environment assumptions in the final response.
 
+## GitHub Issue Coordination
+
+- For issue-driven work, only select tasks from GitHub Issues instead of starting ad hoc code changes.
+- Before editing code for a GitHub issue, confirm the issue declares reserved paths and does not conflict with another open issue labeled `agent-locked`.
+- Do not work inside path prefixes already reserved by another open `agent-locked` issue unless the user explicitly overrides the workflow.
+- Prefer the custom `Next Task Finder` agent to select the next safe issue and the custom `Issue Locker` agent to claim and lock an issue before implementation starts.
+- If the planned change expands beyond the reserved paths, stop and ask for a new issue or a coordination decision instead of continuing.
+
 ## Local Environment Notes
 
 - Use Java 17 or newer.
