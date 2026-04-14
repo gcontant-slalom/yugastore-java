@@ -8,14 +8,16 @@ The repository includes a custom Copilot agent named `PRD From Docs` that can ta
 
 - a PRD saved under `resources/prds/`
 - Mermaid diagrams saved under `resources/prds/diagrams/` when architectural content is present
-- a logical set of GitHub issues derived from that PRD
+- one or more bounded OpenSpec changes under `openspec/changes/`
+- thin GitHub issues derived from OpenSpec tasks
 
 ## How To Invoke It
 
 Use the custom agent picker and select `PRD From Docs`, then give it a simple prompt such as:
 
 - `Create a PRD from this input`
-- `Create a PRD and GitHub issues from these notes`
+- `Create a PRD and OpenSpec changes from these notes`
+- `Create a PRD, OpenSpec change, and issues from this transcript`
 - `Turn this whiteboard photo into a PRD`
 
 The workflow keeps the user prompt simple and puts the complexity inside the agent.
@@ -48,7 +50,26 @@ Those diagrams are intended to help both humans and agents by making:
 
 If the architecture is unclear, the workflow should stop and ask clarifying questions instead of guessing at the diagram.
 
+## How OpenSpec Fits
+
+After a PRD is clear enough, the next step is to create one or more bounded OpenSpec changes.
+
+OpenSpec is the execution layer for this repository:
+
+- PRD: product intent, user needs, scope, constraints, dependencies
+- OpenSpec change package: execution-ready change contract
+- GitHub issue: thin execution wrapper around OpenSpec tasks
+
+OpenSpec changes live under `openspec/changes/<change-name>/` and should include:
+
+- `proposal.md`
+- `specs/`
+- `design.md` when needed
+- `tasks.md`
+
 ## How Issue Generation Works
+
+GitHub issues are generated from OpenSpec task groups, not directly from the PRD.
 
 Before generating issue output, the agent is expected to inspect:
 
@@ -57,7 +78,7 @@ Before generating issue output, the agent is expected to inspect:
 - `gh issue view <id>`
 - `gh label list`
 
-That inspection ensures the generated issues match the repository's existing structure, title prefixes, labels, acceptance-criteria style, dependency notation, and reserved-path workflow.
+That inspection ensures the generated issues match the repository's existing structure, title prefixes, labels, dependency notation, OpenSpec reference format, and reserved-path workflow.
 
 The agent should reuse existing labels and should not invent a new issue format when the repository already has one.
 
@@ -71,6 +92,8 @@ The current repository issue templates define three primary issue shapes:
 
 Generated issues should align to those templates and to the live issue examples already present in GitHub Issues.
 
+For new issues, keep the body thin and point back to the backing OpenSpec change package.
+
 ## How Clarifying Questions Are Handled
 
 The agent must not guess. When critical information is missing or ambiguous, it should stop and ask for clarification using this format:
@@ -80,4 +103,5 @@ NEEDS CLARIFICATION:
 - <question>
 ```
 
-The workflow should only generate or create issues once the input is specific enough to produce implementation-ready work items.
+The workflow should only create OpenSpec changes or GitHub issues once the source material is specific enough to support implementation-ready work.
+

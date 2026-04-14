@@ -1,6 +1,6 @@
 ---
 name: Spike
-about: Time-boxed research task for architecture, schema, or workflow decisions
+about: Time-boxed research task for OpenSpec-backed decisions, architecture, schema, or workflow questions
 title: "SPIKE: "
 labels: ["type:spike"]
 assignees: []
@@ -17,6 +17,11 @@ Explain the delivery risk or decision this spike unblocks.
 ## Scope
 
 List what is in scope and out of scope for the investigation.
+
+## OpenSpec Context
+
+- Change: `openspec/changes/<change-name>/` or `none`
+- Task or requirement reference: `none`
 
 ## Reserved Paths
 

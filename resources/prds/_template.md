@@ -60,11 +60,11 @@ List the primary users or roles if they are relevant to the implementation.
 
 -
 
-## Candidate Work Areas
+## Candidate OpenSpec Changes
 
--
+- `<change-name>`: <bounded change summary>
 
-## Workstream Dependencies
+## OpenSpec Change Dependencies
 
 -
 

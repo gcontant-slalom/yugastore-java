@@ -10,6 +10,8 @@ applyTo: "resources/prds/**/*.md"
 - When architecture or system design information is available, reference Mermaid diagrams stored under `resources/prds/diagrams/`.
 - Always include explicit `Assumptions`, `Open questions`, `Risks`, `Dependencies`, and `Success metrics` sections.
 - Do not bury unresolved ambiguity inside narrative paragraphs. List it under `Open questions` or stop and ask for clarification.
-- If the PRD implies GitHub issues, ensure the PRD is specific enough to derive issue scope, dependencies, and reserved paths.
+- Make the PRD specific enough to derive one or more bounded OpenSpec changes.
+- Use PRDs for product intent, scope, and constraints. Do not turn them into implementation checklists.
+- Include candidate change boundaries and sequencing so OpenSpec changes can be created without guessing.
 - Keep PRDs focused on the product and implementation requirements. Do not embed full GitHub issue bodies inside the PRD.
 - Prefer concise, concrete bullets over long prose when listing requirements and constraints.

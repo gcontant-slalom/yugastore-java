@@ -15,23 +15,28 @@ Use this skill when work should be driven by GitHub Issues and you need to avoid
 - Claim an issue and lock its reserved paths
 - Check whether dependencies are resolved before an agent starts coding
 
+For new issues in this repository, the issue should reference its backing OpenSpec change package.
+
 ## Workflow
 1. Identify candidate issues.
    Favor issues labeled `ready` and avoid issues labeled `blocked` or `agent-locked`.
 
 2. Read the issue body.
-   Every issue that can be claimed should declare `Reserved Paths` and `Dependencies`.
+   Every issue that can be claimed should declare `OpenSpec Change`, `Reserved Paths`, and `Dependencies`.
 
-3. Compare with active locks.
+3. Validate OpenSpec backing.
+   If a new issue does not reference an OpenSpec change package, stop and backfill the OpenSpec change before coding.
+
+4. Compare with active locks.
    Open issues labeled `agent-locked` are treated as active reservations. Compare path prefixes, not just exact file names.
 
-4. Claim only conflict-free work.
+5. Claim only conflict-free work.
    If a candidate issue overlaps with another active reservation or depends on unresolved work, do not claim it.
 
-5. Record the lock.
+6. Record the lock.
    Assign the issue, add `agent-locked`, and post the lock comment using the [lock comment template](./assets/lock-comment-template.md).
 
-6. Stop on expansion.
+7. Stop on expansion.
    If the task grows beyond the reserved paths, stop and open a new issue or coordinate with the owner of the overlapping lock.
 
 ## Default Path Ownership
@@ -43,6 +48,7 @@ Use the repository ownership map in [path ownership](./references/path-ownership
 - `gh issue view <number> --repo gcontant-slalom/yugastore-java --json number,title,body,labels,assignees,url,state`
 - `gh issue edit <number> --repo gcontant-slalom/yugastore-java --add-assignee <login> --add-label agent-locked`
 - `gh issue comment <number> --repo gcontant-slalom/yugastore-java --body-file <file>`
+
 
 ## Custom Agents
 - Use `Next Task Finder` to select the next safe issue without changing GitHub state.

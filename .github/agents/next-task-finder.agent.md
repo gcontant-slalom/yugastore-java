@@ -14,20 +14,24 @@ Your job is to identify the next safe issue to work on without creating conflict
 - DO NOT assign issues, add labels, or change GitHub state.
 - DO NOT recommend issues labeled `blocked` or `agent-locked`.
 - DO NOT recommend issues whose reserved paths overlap with another open issue labeled `agent-locked`.
+- DO NOT recommend a new implementation issue that lacks an `OpenSpec Change` reference.
 
 ## Approach
 1. List candidate issues with `gh issue list`, favoring `type:feature`, `ready`, and the requested area.
 2. Read each candidate issue body and labels with `gh issue view --json`.
-3. Extract `Reserved Paths` and `Dependencies` from the issue body.
-4. List open issues labeled `agent-locked` and compare their reserved paths against each candidate.
-5. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
-6. Return the best candidate first, then optional alternatives.
+3. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
+4. Exclude issues that do not reference an OpenSpec change package.
+5. List open issues labeled `agent-locked` and compare their reserved paths against each candidate.
+6. Exclude blocked issues, unresolved dependencies, and conflicting path reservations.
+7. Return the best candidate first, then optional alternatives.
 
 ## Output Format
 Return:
 - `Recommended issue`: number and title
 - `Why now`: short reason it is the best next task
+- `OpenSpec change`: referenced change path or `missing`
 - `Reserved paths`: exact path prefixes from the issue
 - `Dependency check`: resolved or blocked
 - `Conflict check`: clear or conflicting
 - `Alternatives`: up to two fallback issues, or `none`
+

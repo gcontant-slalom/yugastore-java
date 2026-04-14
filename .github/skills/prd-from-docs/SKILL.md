@@ -15,8 +15,8 @@ This skill is responsible for PRD generation only.
 It should:
 - accept mixed-source inputs such as transcripts, notes, docs, screenshots, UI mockups, whiteboard photos, and repository documentation
 - extract requirements, goals, scope, assumptions, constraints, risks, and open questions
-- identify candidate features or work areas
-- capture dependencies between work areas
+- identify candidate OpenSpec change boundaries or work areas
+- capture dependencies between those change candidates
 - ask clarifying questions when information is missing, contradictory, or materially ambiguous
 - make explicit recommendations when decisions are needed
 - produce an implementation-ready PRD
@@ -24,7 +24,7 @@ It should:
 
 It must not:
 - create GitHub issues
-- inspect GitHub issue conventions unless the user is explicitly asking for issue creation in a later step
+- create OpenSpec changes before the PRD is clear enough
 - guess missing behavior or architecture
 
 ## Inputs This Workflow Supports
@@ -70,8 +70,8 @@ Prefer simple, valid Mermaid markup over visually dense diagrams.
    - side conversation that does not change scope or behavior
 
 3. Identify logical work areas.
-   Group the work into candidate implementation areas that could later become issues.
-   Capture dependencies between those areas when visible from the source material.
+   Group the work into candidate OpenSpec changes or bounded work areas.
+   Capture dependencies between those candidates when visible from the source material.
 
 4. Check for ambiguity.
    If any critical behavior, ownership, scope boundary, or architectural dependency is missing, stop and output:
@@ -93,7 +93,7 @@ Prefer simple, valid Mermaid markup over visually dense diagrams.
    - open questions
    - risks
    - dependencies
-   - candidate work areas
+   - candidate OpenSpec changes
    - recommended sequencing
    - additional decisions still needed
 
@@ -112,13 +112,14 @@ When the source material implies a decision but does not settle it:
 - If a diagram would rely on missing information, ask for clarification first.
 
 ## Handoff Rule
-If the user also wants GitHub issues:
+If the user also wants execution planning:
 - finish the PRD first
 - return the saved PRD path
-- hand off to the `github-issues-from-prd` skill only after the PRD is stable enough for issue generation
+- hand off to the `openspec-from-prd` skill only after the PRD is stable enough for OpenSpec change creation
 
 ## Outputs
 - A PRD saved in `resources/prds/`
 - Mermaid diagrams saved in `resources/prds/diagrams/` when architectural input is present
-- A concise summary of assumptions, open questions, risks, dependencies, candidate work areas, and missing decisions
+- A concise summary of assumptions, open questions, risks, dependencies, candidate OpenSpec changes, and missing decisions
+
 

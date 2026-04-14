@@ -1,30 +1,32 @@
 ---
 name: Feature Story
-about: Deliver one shippable slice within a bounded module or path set
+about: Deliver one shippable slice backed by an OpenSpec change package
 title: "STORY: "
 labels: ["type:feature"]
 assignees: []
 ---
 
-## Goal
+## Summary
 
-Describe the single delivery slice.
+Describe the single execution slice in one short paragraph.
 
-## User Story
+## Scope
 
-As a
-I want
-So that
+List the bounded implementation scope for this issue.
+
+## OpenSpec Change
+
+- Change: `openspec/changes/<change-name>/`
+
+## OpenSpec Tasks
+
+- `X.Y <task group or task reference>`
 
 ## Acceptance Criteria
 
 - [ ]
 - [ ]
 - [ ]
-
-## Owner
-
-Primary owner for this issue.
 
 ## Affected Modules
 
@@ -57,12 +59,9 @@ Example:
 
 - `./mvnw -pl api-gateway-microservice test`
 
-## Draft PR Rule
-
-Once coding starts, open a draft PR and repeat the reserved paths there.
-
 ## Done Definition
 
 - [ ] Acceptance criteria met
 - [ ] Reserved paths stayed within issue scope
+- [ ] OpenSpec tasks referenced by this issue are complete or updated
 - [ ] Verification completed or documented as blocked

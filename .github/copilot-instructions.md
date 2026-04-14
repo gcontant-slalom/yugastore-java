@@ -43,6 +43,8 @@
 ## GitHub Issue Coordination
 
 - For issue-driven work, only select tasks from GitHub Issues instead of starting ad hoc code changes.
+- For new implementation work, use the OpenSpec change package referenced by the issue as the primary execution context.
+- If an issue lacks an OpenSpec change reference, stop and create or update the backing OpenSpec change before coding.
 - Before editing code for a GitHub issue, confirm the issue declares reserved paths and does not conflict with another open issue labeled `agent-locked`.
 - Do not work inside path prefixes already reserved by another open `agent-locked` issue unless the user explicitly overrides the workflow.
 - Prefer the custom `Next Task Finder` agent to select the next safe issue and the custom `Issue Locker` agent to claim and lock an issue before implementation starts.
@@ -53,9 +55,19 @@
 - When the user asks to create a PRD from transcripts, screenshots, whiteboard photos, or raw documentation, prefer the custom `PRD From Docs` agent.
 - Save generated PRDs under `resources/prds/`.
 - When architectural documentation is present, convert it into Mermaid diagrams under `resources/prds/diagrams/` and reference those files from the PRD.
-- Before generating any GitHub issue output from a PRD, inspect `.github/ISSUE_TEMPLATE/`, run `gh issue list`, and inspect representative issues with `gh issue view` so the issue structure matches the repository's existing conventions.
+- After a PRD is clear enough, create one or more bounded OpenSpec changes under `openspec/changes/` before generating GitHub issues.
+- Generate GitHub issues from OpenSpec tasks, not directly from the PRD.
+- Before generating any GitHub issue output from an OpenSpec change, inspect `.github/ISSUE_TEMPLATE/`, run `gh issue list`, and inspect representative issues with `gh issue view` so the issue structure matches the repository's existing conventions.
 - Reuse only existing GitHub labels unless the user explicitly asks to change the taxonomy.
 - If the source material is ambiguous, stop and ask clarifying questions rather than guessing at requirements or issue scope.
+
+## OpenSpec Workflow
+
+- Use the official OpenSpec CLI workflow in this repository.
+- The active schema is `spec-driven` under `openspec/config.yaml`.
+- Use `openspec init --tools github-copilot` and `openspec update` when refreshing generated guidance.
+- Keep OpenSpec artifacts lightweight: `proposal.md` for why and scope, `specs/` for behavior changes, `design.md` only when decisions need recording, and `tasks.md` for implementation slices.
+- Treat GitHub issues as thin execution wrappers that reference the OpenSpec change and task groups.
 
 ## Local Environment Notes
 

@@ -1,14 +1,22 @@
 ---
 name: Epic
-about: Track a cross-cutting business outcome made up of multiple stories
+about: Track a multi-issue outcome backed by one or more OpenSpec changes
 title: "EPIC: "
 labels: ["type:epic"]
 assignees: []
 ---
 
-## Goal
+## Summary
 
-Describe the business outcome this epic delivers.
+Describe the business or delivery outcome this epic coordinates.
+
+## Scope
+
+Describe the boundaries of the epic and what it does not include.
+
+## OpenSpec Changes
+
+- `openspec/changes/<change-name>/`
 
 ## Outcome
 
@@ -68,5 +76,6 @@ List blocking issues, decisions, or external dependencies.
 ## Done Definition
 
 - [ ] All child issues are complete
+- [ ] Referenced OpenSpec changes are implemented or archived as appropriate
 - [ ] Reserved paths were coordinated without overlap
 - [ ] Verification notes were added to the final PRs
