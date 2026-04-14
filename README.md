@@ -102,12 +102,22 @@ flowchart LR
 | [checkout](https://github.com/yugabyte/yugastore-java/tree/master/checkout-microservice) | YCQL | [localhost:8086](http://localhost:8086) | This deals with the checkout process and the placed order. It also manages the inventory of all the products because it needs to ensure the product the user is about to order is still in stock.
 | [login](https://github.com/yugabyte/yugastore-java/tree/master/login-microservice) | YSQL | [localhost:8085](http://localhost:8085) | Handles login and authentication of the users. *Note that this is still a work in progress.*
 
+## Current Assertions
+
+- The repository currently contains seven runnable modules: Eureka service discovery, API gateway, products, cart, checkout, login, and the React UI wrapper.
+- The product and checkout services use YCQL, while the cart and login services use YSQL-compatible access.
+- The local happy path documented in this repository is still centered on Eureka, the API gateway, products, checkout, cart, and the React UI. The login service exists in the repo, but it is still incomplete and is not part of the primary startup flow.
+- The checked-in YSQL schema currently creates the `shopping_cart` table only. YCQL schema and seed data are more complete than the YSQL setup.
+- The React application is packaged through the Spring Boot `react-ui` module, with the frontend source living under `react-ui/frontend`.
+- The Docker helper script starts Eureka, API gateway, products, checkout, cart, and the React UI. It does not currently start the login service.
+- For local builds and service startup, prefer the Maven wrapper scripts checked into this repository.
+
 # Build and run
 
 To build, simply run the following from the base directory:
 
 ```
-$ mvn -DskipTests package
+$ ./mvnw -DskipTests package
 ```
 
 To run the app locally, you need a YugabyteDB instance, the required schemas, the sample data, and then each of the microservices followed by the React UI.
@@ -136,6 +146,7 @@ Now create the necessary tables as shown below. Note that these steps would take
 ```
 $ cd resources
 $ cqlsh -f schema.cql
+$ ysqlsh -h 127.0.0.1 -p 5433 -f schema.sql
 ```
 
 If you are using Docker for YugabyteDB, initialize both the YCQL and YSQL schemas from the repo root as follows:
@@ -201,62 +212,62 @@ You can do this as follows:
 
 ```
 $ cd eureka-server-local/
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ```
 
 Verify this is running by browsing to the [Spring Eureka Service Discovery dashboard](http://localhost:8761/).
 
-## Step 2: Start the api gateway microservice
+## Step 3: Start the api gateway microservice
 
-To run the products microservice, do the following in a separate shell:
+To run the api gateway microservice, do the following in a separate shell:
 
 ```
 $ cd api-gateway-microservice/
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ```
 
 
-## Step 3: Start the products microservice
+## Step 4: Start the products microservice
 
 To run the products microservice, do the following in a separate shell:
 
 ```
 $ cd products-microservice/
-$ mvn spring-boot:run
-```
-
-## Step 4: Start the checkout microservice
-
-To run the products microservice, do the following in a separate shell:
-
-```
-$ cd checkout-microservice/
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ```
 
 ## Step 5: Start the checkout microservice
+
+To run the checkout microservice, do the following in a separate shell:
+
+```
+$ cd checkout-microservice/
+$ ./mvnw spring-boot:run
+```
+
+## Step 6: Start the cart microservice
 
 To run the cart microservice, do the following in a separate shell:
 
 ```
 $ cd cart-microservice/
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ```
 
-## Step 6: Start the UI
+## Step 7: Start the UI
 
-To do this, simply run `npm start` from the `frontend` directory in a separate shell:
+To start the Spring Boot wrapper that serves the React build, run the following in a separate shell:
 
 ```
 $ cd react-ui
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ```
 
 Now browse to the marketplace app at [http://localhost:8080/](http://localhost:8080/).
 
 # Running the app in docker containers
 
-The dockers images are built along with the binaries when `mvn -DskipTests package` was run.
+The Docker images are built along with the binaries when `./mvnw -DskipTests package` was run.
 To run the docker containers, run the following script after you have initialized YugabyteDB as described in [Step 1](#step-1-install-and-initialize-yugabyte-db):
 
 ```
