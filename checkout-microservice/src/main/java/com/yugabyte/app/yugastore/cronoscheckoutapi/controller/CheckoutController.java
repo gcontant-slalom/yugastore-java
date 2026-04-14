@@ -2,6 +2,7 @@ package com.yugabyte.app.yugastore.cronoscheckoutapi.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yugabyte.app.yugastore.cronoscheckoutapi.domain.CheckoutStatus;
@@ -21,8 +22,7 @@ public class CheckoutController {
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/checkout", produces = "application/json")
-	public CheckoutStatus checkout() {
-		String userId = "u1001";
+	public CheckoutStatus checkout(@RequestParam("userid") String userId) {
 		CheckoutStatus checkoutStatus = new CheckoutStatus();
 		try {
 			Order currentOrder = checkoutService.checkout(userId);

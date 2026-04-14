@@ -30,9 +30,9 @@ class CheckoutServiceRestImplTest {
         CheckoutStatus expected = new CheckoutStatus();
         expected.setStatus(CheckoutStatus.SUCCESS);
         expected.setOrderNumber("order-abc");
-        when(checkoutRestClient.checkout()).thenReturn(expected);
+        when(checkoutRestClient.checkout("42")).thenReturn(expected);
 
-        CheckoutStatus result = service.checkout();
+        CheckoutStatus result = service.checkout("42");
 
         assertThat(result.getStatus()).isEqualTo(CheckoutStatus.SUCCESS);
         assertThat(result.getOrderNumber()).isEqualTo("order-abc");
@@ -43,9 +43,9 @@ class CheckoutServiceRestImplTest {
         CheckoutStatus expected = new CheckoutStatus();
         expected.setStatus(CheckoutStatus.FAILURE);
         expected.setOrderNumber("");
-        when(checkoutRestClient.checkout()).thenReturn(expected);
+        when(checkoutRestClient.checkout("42")).thenReturn(expected);
 
-        CheckoutStatus result = service.checkout();
+        CheckoutStatus result = service.checkout("42");
 
         assertThat(result.getStatus()).isEqualTo(CheckoutStatus.FAILURE);
         assertThat(result.getOrderNumber()).isEmpty();

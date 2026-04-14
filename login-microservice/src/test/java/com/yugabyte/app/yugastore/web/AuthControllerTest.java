@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yugabyte.app.yugastore.model.User;
 import com.yugabyte.app.yugastore.service.UserService;
 import com.yugabyte.app.yugastore.validator.UserValidator;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -76,6 +77,26 @@ class AuthControllerTest {
             errors.rejectValue("email", "Duplicate.userForm.email");
             return null;
         }).when(userValidator).validate(any(), any(Errors.class));
+
+        AuthRegistrationRequest request = new AuthRegistrationRequest();
+        request.setEmail("merchant@example.com");
+        request.setPassword("password123");
+        request.setPasswordConfirm("password123");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Registration request rejected."))
+                .andExpect(jsonPath("$.fieldErrors.email").value("Someone already has that email address."));
+    }
+
+    @Test
+    void register_returnsDuplicateEmailWhenPersistenceConstraintFails() throws Exception {
+        doNothing().when(userValidator).validate(any(), any(Errors.class));
+        doAnswer(invocation -> {
+            throw new DataIntegrityViolationException("duplicate email");
+        }).when(userService).save(any(User.class));
 
         AuthRegistrationRequest request = new AuthRegistrationRequest();
         request.setEmail("merchant@example.com");

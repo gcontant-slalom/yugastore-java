@@ -5,9 +5,9 @@
 
 ## 2. Backend Authentication Implementation
 
-- [ ] 2.1 Implement registration validation, duplicate-email handling, and secure password hashing in `login-microservice`.
-- [ ] 2.2 Implement login credential validation and the chosen browser-facing authenticated-state mechanism.
-- [ ] 2.3 Implement logout behavior that clears the active session or token state and stops protected flows from falling back to the hard-coded demo user.
+- [x] 2.1 Implement registration validation, duplicate-email handling, and secure password hashing in `login-microservice`.
+- [x] 2.2 Implement login credential validation and the chosen browser-facing authenticated-state mechanism.
+- [x] 2.3 Implement logout behavior that clears the active session or token state and stops protected flows from falling back to the hard-coded demo user.
 
 ## 3. Gateway and Frontend Integration
 

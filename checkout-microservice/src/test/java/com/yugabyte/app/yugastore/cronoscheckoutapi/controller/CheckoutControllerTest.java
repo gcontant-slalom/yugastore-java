@@ -39,9 +39,9 @@ class CheckoutControllerTest {
     @Test
     void checkout_whenOrderSucceeds_returnsSuccessStatus() throws Exception {
         Order order = buildOrder("order-123", "Customer bought: Gadget X", 49.99);
-        when(checkoutService.checkout("u1001")).thenReturn(order);
+        when(checkoutService.checkout("42")).thenReturn(order);
 
-        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout"))
+        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(CheckoutStatus.SUCCESS))
                 .andExpect(jsonPath("$.orderNumber").value("order-123"))
@@ -50,9 +50,9 @@ class CheckoutControllerTest {
 
     @Test
     void checkout_whenCartIsEmpty_returnsFailureStatus() throws Exception {
-        when(checkoutService.checkout("u1001")).thenReturn(null);
+        when(checkoutService.checkout("42")).thenReturn(null);
 
-        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout"))
+        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(CheckoutStatus.FAILURE))
                 .andExpect(jsonPath("$.orderNumber").value(""))
@@ -61,10 +61,10 @@ class CheckoutControllerTest {
 
     @Test
     void checkout_whenNotEnoughStock_returnsFailureStatus() throws Exception {
-        when(checkoutService.checkout("u1001"))
+        when(checkoutService.checkout("42"))
                 .thenThrow(new NotEnoughProductsInStockException("Gadget X", 1));
 
-        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout"))
+        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(CheckoutStatus.FAILURE))
                 .andExpect(jsonPath("$.orderNumber").value(""));
@@ -75,7 +75,7 @@ class CheckoutControllerTest {
         order.setId(id);
         order.setOrder_details(details);
         order.setOrder_total(total);
-        order.setUser_id(1);
+        order.setUser_id(42);
         return order;
     }
 }

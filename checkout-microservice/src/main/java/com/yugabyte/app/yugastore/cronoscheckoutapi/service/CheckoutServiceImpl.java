@@ -69,10 +69,10 @@ public class CheckoutServiceImpl {
 			}
 			double orderTotal = getTotal(products);
 			orderDetails.append(" Order Total is : " + orderTotal);
-			currentOrder = createOrder(orderDetails.toString(), orderTotal);
+			currentOrder = createOrder(userId, orderDetails.toString(), orderTotal);
 			updateCartpreparedStatement
 					.append(" INSERT INTO orders (order_id, user_id, order_details, order_time, order_total) VALUES ("
-							+ "'" + currentOrder.getId() + "', " + "'1'" + ", '" + currentOrder.getOrder_details()
+							+ "'" + currentOrder.getId() + "', '" + currentOrder.getUser_id() + "', '" + currentOrder.getOrder_details()
 							+ "', '" + currentOrder.getOrder_time() + "'," + currentOrder.getOrder_total() + ");");
 			updateCartpreparedStatement.append(" END TRANSACTION;");
 			System.out.println("Statemet is " + updateCartpreparedStatement.toString());
@@ -96,11 +96,11 @@ public class CheckoutServiceImpl {
 		return price;
 	}
 
-	private Order createOrder(String orderDetails, double orderTotal) {
+	private Order createOrder(String userId, String orderDetails, double orderTotal) {
 		Order order = new Order();
 		LocalDateTime currentTime = LocalDateTime.now();
 		order.setId(UUID.randomUUID().toString());
-		order.setUser_id(1);
+		order.setUser_id(Integer.parseInt(userId));
 		order.setOrder_details(orderDetails);
 		order.setOrder_time(currentTime.toString());
 		order.setOrder_total(orderTotal);

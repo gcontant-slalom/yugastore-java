@@ -57,12 +57,12 @@ class CheckoutServiceImplTest {
 
     @Test
     void checkout_whenCartIsEmpty_returnsNull() throws NotEnoughProductsInStockException {
-        when(shoppingCartRestClient.getProductsInCart("u1001")).thenReturn(Collections.emptyMap());
+        when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(Collections.emptyMap());
 
-        Order result = checkoutService.checkout("u1001");
+        Order result = checkoutService.checkout("42");
 
         assertThat(result).isNull();
-        verify(shoppingCartRestClient).clearCart("u1001");
+        verify(shoppingCartRestClient).clearCart("42");
     }
 
     @Test
@@ -72,17 +72,18 @@ class CheckoutServiceImplTest {
         ProductInventory inventory = buildInventory("B001", 10);
         ProductMetadata product = buildProduct("B001", "Gadget X", 25.0);
 
-        when(shoppingCartRestClient.getProductsInCart("u1001")).thenReturn(cart);
+        when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(cart);
         when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
         when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
 
-        Order result = checkoutService.checkout("u1001");
+        Order result = checkoutService.checkout("42");
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isNotBlank();
+        assertThat(result.getUser_id()).isEqualTo(42);
         assertThat(result.getOrder_total()).isEqualTo(50.0);
         assertThat(result.getOrder_details()).contains("Gadget X");
-        verify(shoppingCartRestClient).clearCart("u1001");
+        verify(shoppingCartRestClient).clearCart("42");
     }
 
     @Test
@@ -91,11 +92,11 @@ class CheckoutServiceImplTest {
         ProductInventory inventory = buildInventory("B001", 2);
         ProductMetadata product = buildProduct("B001", "Gadget X", 25.0);
 
-        when(shoppingCartRestClient.getProductsInCart("u1001")).thenReturn(cart);
+        when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(cart);
         when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
         when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
 
-        assertThatThrownBy(() -> checkoutService.checkout("u1001"))
+        assertThatThrownBy(() -> checkoutService.checkout("42"))
                 .isInstanceOf(NotEnoughProductsInStockException.class)
                 .hasMessageContaining("Gadget X");
     }

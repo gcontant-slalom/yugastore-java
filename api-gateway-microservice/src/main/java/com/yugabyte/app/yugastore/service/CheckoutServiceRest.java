@@ -4,6 +4,6 @@ import com.yugabyte.app.yugastore.domain.CheckoutStatus;
 
 public interface CheckoutServiceRest {
 	
-	CheckoutStatus checkout();
+	CheckoutStatus checkout(String userId);
 
 }

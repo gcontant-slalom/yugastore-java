@@ -6,8 +6,10 @@ import com.yugabyte.app.yugastore.validator.UserValidator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,7 +50,11 @@ public class AuthController {
             return ResponseEntity.badRequest().body(buildValidationError(errors));
         }
 
-        userService.save(user);
+        try {
+            userService.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(buildDuplicateEmailError());
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(AuthUserResponse.fromUser(user));
     }
 
@@ -80,8 +86,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
         SecurityContextHolder.clearContext();
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
         return ResponseEntity.noContent().build();
     }
 
@@ -104,6 +113,15 @@ public class AuthController {
     private AuthErrorResponse buildMessageError(String message) {
         AuthErrorResponse response = new AuthErrorResponse();
         response.setMessage(message);
+        return response;
+    }
+
+    private AuthErrorResponse buildDuplicateEmailError() {
+        AuthErrorResponse response = new AuthErrorResponse();
+        response.setMessage("Registration request rejected.");
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        fieldErrors.put("email", "Someone already has that email address.");
+        response.setFieldErrors(fieldErrors);
         return response;
     }
 

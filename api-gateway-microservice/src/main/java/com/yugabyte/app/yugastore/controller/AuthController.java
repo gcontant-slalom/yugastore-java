@@ -4,6 +4,7 @@ import com.yugabyte.app.yugastore.domain.AuthLoginRequest;
 import com.yugabyte.app.yugastore.domain.AuthRegistrationRequest;
 import com.yugabyte.app.yugastore.domain.AuthUser;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,8 +34,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
         authServiceRest.logout();
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
         return ResponseEntity.noContent().build();
     }
 
