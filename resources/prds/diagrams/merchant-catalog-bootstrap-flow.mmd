@@ -1,0 +1,22 @@
+flowchart LR
+    Seed[Seed assets under resources]
+    Route[Tenant route in browser]
+    UI[React UI storefront]
+    Gateway[API Gateway]
+    Products[products-microservice]
+    Cart[cart-microservice]
+    Checkout[checkout-microservice]
+
+    Seed --> Products
+    Route --> UI
+    UI --> Gateway
+    Gateway --> Products
+    Products --> Gateway
+    Gateway --> UI
+    UI --> Cart
+    Cart --> Gateway
+    Gateway --> Checkout
+
+    Gateway -. active tenant context .-> Products
+    Gateway -. active tenant context .-> Cart
+    Gateway -. active tenant context .-> Checkout

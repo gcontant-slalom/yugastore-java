@@ -1,0 +1,16 @@
+sequenceDiagram
+    actor Sales as Sales/Internal Team
+    actor Merchant as Merchant Representative
+    participant UI as React UI Merchant Route
+    participant GW as API Gateway
+    participant Auth as login-microservice
+    participant Tenant as Tenant Foundation Logic
+
+    Sales->>Merchant: Share merchant signup link
+    Merchant->>UI: Open signup route and enter company/store details
+    UI->>GW: Submit onboarding request
+    GW->>Auth: Create or link merchant-admin identity
+    GW->>Tenant: Create merchant company/store and tenant context
+    Tenant-->>GW: Return tenant identifier
+    GW-->>UI: Onboarding success with tenant route
+    UI-->>Merchant: Navigate to tenant-specific merchant context
