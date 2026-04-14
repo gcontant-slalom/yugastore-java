@@ -6,10 +6,13 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -23,6 +26,8 @@ public class DashboardRestConsumer {
 
 	@Autowired
 	RestTemplate restTemplate;
+
+	public static final String AUTH_USER_ID_HEADER = "X-Authenticated-UserId";
 	
 	@Value("${cronos.yugabyte.api:http://localhost:8081/api/v1}")
 	String restUrlBase;
@@ -71,79 +76,101 @@ public class DashboardRestConsumer {
 	}	
 
 	public String addProductToCart(String asin) {
+		return addProductToCart(asin, null).getBody();
+	}
+
+	public ResponseEntity<String> addProductToCart(String asin, String userId) {
 
 		String restURL = restUrlBase + "shoppingCart/addProduct";
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("asin", asin);
-		
+		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params,
+				buildHeaders(userId, MediaType.APPLICATION_FORM_URLENCODED));
 
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params, null);
-
-		ResponseEntity<String> rateResponse =
-		        restTemplate.exchange(restURL,
-		                    HttpMethod.POST, request, new ParameterizedTypeReference<String>() {
-		            });
-		String addProductJsonResponse = rateResponse.getBody();
-		return addProductJsonResponse;
+		return exchange(restURL, HttpMethod.POST, request);
 	}
 
 	public String removeProductFromCart(String asin) {
+		return removeProductFromCart(asin, null).getBody();
+	}
+
+	public ResponseEntity<String> removeProductFromCart(String asin, String userId) {
 
 		String restURL = restUrlBase + "shoppingCart/removeProduct";
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("asin", asin);
-		
+		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params,
+				buildHeaders(userId, MediaType.APPLICATION_FORM_URLENCODED));
 
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params, null);
-
-		ResponseEntity<String> rateResponse =
-		        restTemplate.exchange(restURL,
-		                    HttpMethod.POST, request, new ParameterizedTypeReference<String>() {
-		            });
-		String addProductJsonResponse = rateResponse.getBody();
-		return addProductJsonResponse;
+		return exchange(restURL, HttpMethod.POST, request);
 	}
 
 	public String getCart() {
+		return getCart(null).getBody();
+	}
+
+	public ResponseEntity<String> getCart(String userId) {
 		String restURL = restUrlBase + "shoppingCart";
-		ResponseEntity<String> rateResponse =
-		        restTemplate.exchange(restURL,
-		                    HttpMethod.POST, null, new ParameterizedTypeReference<String>() {
-		            });
-		String getCartJsonResponse = rateResponse.getBody();
-		return getCartJsonResponse;
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
 	}
 
 	public String checkout() {
+		return checkout(null).getBody();
+	}
+
+	public ResponseEntity<String> checkout(String userId) {
 
 		String restURL = restUrlBase + "shoppingCart/checkout";
-		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.add("userId", "1");
-		
-
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params, null);
-
-		ResponseEntity<String> rateResponse =
-		        restTemplate.exchange(restURL,
-		                    HttpMethod.POST, request, new ParameterizedTypeReference<String>() {
-		            });
-		String addProductJsonResponse = rateResponse.getBody();
-		return addProductJsonResponse;
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
 	}
 
 	public String showCart() {
-		String restURL = restUrlBase + "shoppingCart";
-		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.add("userId", "1");
-		
+		return showCart(null).getBody();
+	}
 
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params, null);
+	public ResponseEntity<String> showCart(String userId) {
+		return getCart(userId);
+	}
 
-		ResponseEntity<String> rateResponse =
-		        restTemplate.exchange(restURL,
-		                    HttpMethod.POST, request, new ParameterizedTypeReference<String>() {
-		            });
-		String addProductJsonResponse = rateResponse.getBody();
-		return addProductJsonResponse;
-	}	
+	public ResponseEntity<String> register(String payload) {
+		String restURL = restUrlBase + "auth/register";
+		HttpEntity<String> request = new HttpEntity<String>(payload, buildHeaders(null, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
+	}
+
+	public ResponseEntity<String> login(String payload) {
+		String restURL = restUrlBase + "auth/login";
+		HttpEntity<String> request = new HttpEntity<String>(payload, buildHeaders(null, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
+	}
+
+	public ResponseEntity<String> logout() {
+		String restURL = restUrlBase + "auth/logout";
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(null, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
+	}
+
+	private HttpHeaders buildHeaders(String userId, MediaType contentType) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		if (contentType != null) {
+			headers.setContentType(contentType);
+		}
+		if (userId != null && !userId.isBlank()) {
+			headers.add(AUTH_USER_ID_HEADER, userId);
+		}
+		return headers;
+	}
+
+	private <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> request) {
+		try {
+			return restTemplate.exchange(url, method, request, new ParameterizedTypeReference<T>() {
+			});
+		} catch (HttpStatusCodeException ex) {
+			return ResponseEntity.status(ex.getStatusCode()).headers(ex.getResponseHeaders())
+					.body((T) ex.getResponseBodyAsString());
+		}
+	}
 }

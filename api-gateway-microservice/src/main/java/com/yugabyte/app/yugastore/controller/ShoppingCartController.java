@@ -2,6 +2,8 @@ package com.yugabyte.app.yugastore.controller;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.yugabyte.app.yugastore.domain.CheckoutStatus;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
@@ -19,6 +22,8 @@ import com.yugabyte.app.yugastore.service.ShoppingCartServiceRest;
 @RestController
 @RequestMapping(value = "/api/v1")
 public class ShoppingCartController {
+
+	public static final String AUTH_USER_ID_HEADER = "X-Authenticated-UserId";
 
 	private final ShoppingCartServiceRest shoppingCartServiceRest;
 
@@ -36,9 +41,9 @@ public class ShoppingCartController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart", produces = "application/json")
-	public @ResponseBody ResponseEntity<Map<String, Integer>> shoppingCart() {
+	public @ResponseBody ResponseEntity<Map<String, Integer>> shoppingCart(HttpServletRequest request) {
 
-		String userId = currentUserId();
+		String userId = currentUserId(request);
 		Map<String, Integer> productsInCart = shoppingCartServiceRest.getProductsInCart(userId);
 
 		if (productsInCart == null) {
@@ -48,8 +53,8 @@ public class ShoppingCartController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/addProduct", produces = "application/json")
-	public ResponseEntity<?> addProductToCart(@RequestParam("asin") String asin) {
-		String userId = currentUserId();
+	public ResponseEntity<?> addProductToCart(@RequestParam("asin") String asin, HttpServletRequest request) {
+		String userId = currentUserId(request);
 		shoppingCartServiceRest.addProduct(userId, asin);
 		Map<String, Integer> productsInCart = shoppingCartServiceRest.getProductsInCart(userId);
 
@@ -61,8 +66,9 @@ public class ShoppingCartController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/removeProduct", produces = "application/json")
-	public ResponseEntity<Map<String, Integer>> removeProductFromCart(@RequestParam("asin") String asin) {
-		String userId = currentUserId();
+	public ResponseEntity<Map<String, Integer>> removeProductFromCart(@RequestParam("asin") String asin,
+			HttpServletRequest request) {
+		String userId = currentUserId(request);
 		shoppingCartServiceRest.removeProduct(userId, asin);
 		Map<String, Integer> productsInCart = shoppingCartServiceRest.getProductsInCart(userId);
 
@@ -73,14 +79,22 @@ public class ShoppingCartController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/checkout", produces = "application/json")
-	public ResponseEntity<CheckoutStatus> checkout() {
-		String userId = currentUserId();
+	public ResponseEntity<CheckoutStatus> checkout(HttpServletRequest request) {
+		String userId = currentUserId(request);
 		CheckoutStatus checkoutStatus = checkoutServiceRest.checkout(userId);
 		return new ResponseEntity<CheckoutStatus>(checkoutStatus, HttpStatus.OK);
 	}
 
-	private String currentUserId() {
-		return authServiceRest.currentUser().getUserId();
+	private String currentUserId(HttpServletRequest request) {
+		String forwardedUserId = request.getHeader(AUTH_USER_ID_HEADER);
+		if (forwardedUserId != null && !forwardedUserId.isBlank()) {
+			return forwardedUserId;
+		}
+		try {
+			return authServiceRest.currentUser().getUserId();
+		} catch (ResponseStatusException ex) {
+			throw ex;
+		}
 	}
 
 }

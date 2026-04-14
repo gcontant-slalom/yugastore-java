@@ -56,6 +56,17 @@ class CartProducts extends Component {
   }
   render() {
     const self = this;
+    if (!this.props.currentUser) {
+      return(
+        <div className="cart-container">
+          <div className="container">
+            <h5>Items in cart</h5>
+            <h6>Please sign in to view and modify your cart.</h6>
+            <Link to="/login">Go to sign in</Link>
+          </div>
+        </div>
+      );
+    }
     const totalCost = this.state.products.length ? this.state.products.reduce(this.costReducer, 0) : 0;
     return(
       <div className="cart-container">

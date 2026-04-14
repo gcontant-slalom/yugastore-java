@@ -6,6 +6,7 @@ import Cart from '../Cart';
 import ShowProduct from '../ShowProduct';
 import Products from '../Products';
 import Home from '../Home';
+import Auth from '../Auth';
 import { Navbar, Footer, Subscribe } from '../Main/components';
 import { Route, Switch } from 'react-router-dom';
 import './index.css';
@@ -19,6 +20,10 @@ export default class App extends Component {
         data: {},
         total: 0
       },
+      currentUser: null,
+      authLoaded: false,
+      authPending: false,
+      authMessage: '',
       scrolled: false,
       index: 0,
     };
@@ -29,7 +34,7 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    this.fetchCart();
+    this.fetchCurrentUser();
   }
 
   componentWillMount() {
@@ -53,24 +58,72 @@ export default class App extends Component {
     });
   }
 
-  fetchCart = () => {
-    const self = this;
-    var url = '/cart/get';
-    fetch(url, {
-      method: "POST",
+  requestJson = (url, options = {}) => {
+    const requestOptions = Object.assign({
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    }, options);
+
+    return fetch(url, requestOptions).then(async res => {
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      if (!res.ok) {
+        const error = new Error((data && data.message) || 'Request failed');
+        error.status = res.status;
+        error.data = data;
+        throw error;
       }
-    })
-      .then(res => res.json())
+      return data;
+    });
+  }
+
+  fetchCurrentUser = () => {
+    return this.requestJson('/auth/current-user', { method: 'GET' })
+      .then(currentUser => {
+        this.setState({ currentUser, authLoaded: true, authMessage: '' });
+        return this.fetchCart(currentUser);
+      })
+      .catch(error => {
+        if (error.status === 401) {
+          this.setState({
+            currentUser: null,
+            authLoaded: true,
+            authPending: false,
+            authMessage: '',
+            cart: { data: {}, total: 0, error: false }
+          });
+          return null;
+        }
+        this.setState({ authLoaded: true, authMessage: error.message });
+        return null;
+      });
+  }
+
+  fetchCart = () => {
+    if (!this.state.currentUser) {
+      this.setState({ cart: { data: {}, total: 0, error: false } });
+      return Promise.resolve(null);
+    }
+
+    return this.requestJson('/cart/get', { method: 'POST' })
       .then(cart => this.setState({
         cart: {
           data: cart,
-          total: self.totalReducer(cart),
+          total: this.totalReducer(cart),
           error: false
         }
-      }));
+      }))
+      .catch(error => {
+        if (error.status === 401) {
+          this.setState({ currentUser: null, authMessage: 'Please sign in to continue.' });
+          return null;
+        }
+        this.setState({ cart: { ...this.state.cart, error: true } });
+        return null;
+      });
   }
 
   totalReducer = (data) => {
@@ -84,32 +137,30 @@ export default class App extends Component {
   }
 
   addItemToCart = (product) => {
+    if (!this.state.currentUser) {
+      this.setState({ authMessage: 'Please sign in before adding items to the cart.' });
+      return;
+    }
     if (product) {
       console.log("Added to Cart "+product.title);
       
-      const self = this;
       const url = '/cart/add?asin='+(product.id.asin || product.id);
-      let requestData = new FormData();
-      requestData.append( "json", JSON.stringify( {asin: product.id} ));
-
-      fetch(url, {  
-        method: 'POST',
-        body: requestData,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => res.json())
+      this.requestJson(url, { method: 'POST' })
         .then(data => {
-            self.setState({
+            this.setState({
               cart: {
                 data: data,
-                total: self.totalReducer(data)
-              }
+                total: this.totalReducer(data),
+                error: false
+              },
+              authMessage: ''
             });
         })
         .catch(error => {
+          if (error.status === 401) {
+            this.setState({ currentUser: null, authMessage: 'Please sign in before adding items to the cart.' });
+            return;
+          }
           this.setState({
             cart: { ...this.state.cart, error: true }
           });
@@ -124,36 +175,30 @@ export default class App extends Component {
   }
 
   removeItemFromCart = (product) => {
+    if (!this.state.currentUser) {
+      this.setState({ authMessage: 'Please sign in before modifying the cart.' });
+      return;
+    }
     if (product) {
       console.log("Removed from Cart "+product.title);
       
-      const self = this;
       const url = '/cart/remove/?asin='+product.id;
-      let requestData = new FormData();
-      requestData.append( "json", JSON.stringify( {asin: product.id} ));
-
-      fetch(url, {  
-        method: 'POST',
-        body: requestData,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => res.json())
+      this.requestJson(url, { method: 'POST' })
         .then(data => {
-            // const dataMerged = {};
-            // const data = self.state.cart.data;
-            // dataMerged[product.id.asin || product.id] = data[product.id.asin || product.id] ? data[product.id.asin || product.id] + 1 : 1;
-            
-            self.setState({
+            this.setState({
               cart: {
                 data: data,
-                total: self.totalReducer(data)
-              }
+                total: this.totalReducer(data),
+                error: false
+              },
+              authMessage: ''
             });
         })
         .catch(error => {
+          if (error.status === 401) {
+            this.setState({ currentUser: null, authMessage: 'Please sign in before modifying the cart.' });
+            return;
+          }
           this.setState({
             cart: { ...this.state.cart, error: true }
           });
@@ -166,11 +211,60 @@ export default class App extends Component {
     }
   }
 
+  login = credentials => {
+    this.setState({ authPending: true, authMessage: '' });
+    return this.requestJson('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    })
+      .then(currentUser => {
+        this.setState({ currentUser, authPending: false, authMessage: '' });
+        return this.fetchCart();
+      })
+      .catch(error => {
+        this.setState({ authPending: false, authMessage: error.message });
+        return null;
+      });
+  }
+
+  register = payload => {
+    this.setState({ authPending: true, authMessage: '' });
+    return this.requestJson('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+      .then(currentUser => {
+        this.setState({ currentUser, authPending: false, authMessage: '' });
+        return this.fetchCart();
+      })
+      .catch(error => {
+        const fieldErrors = error.data && error.data.fieldErrors ? Object.values(error.data.fieldErrors) : [];
+        this.setState({
+          authPending: false,
+          authMessage: fieldErrors[0] || error.message
+        });
+        return null;
+      });
+  }
+
+  logout = () => {
+    return this.requestJson('/auth/logout', { method: 'POST' })
+      .catch(() => null)
+      .then(() => {
+        this.setState({
+          currentUser: null,
+          authPending: false,
+          authMessage: '',
+          cart: { data: {}, total: 0, error: false }
+        });
+      });
+  }
+
   render() {
     return(
 
       <div>
-        <Navbar cart={this.state.cart} scrolled={this.state.scrolled}/>
+        <Navbar cart={this.state.cart} scrolled={this.state.scrolled} currentUser={this.state.currentUser} onLogout={this.logout} />
         <Switch>
           <Route exact path="/" 
             render={(props) => (
@@ -181,7 +275,27 @@ export default class App extends Component {
           <Route path="/cart" 
             render={(props) => (
               <Cart
-                cart={this.state.cart} fetchCart={this.fetchCart} removeItemFromCart={this.removeItemFromCart}/>
+                cart={this.state.cart} currentUser={this.state.currentUser} fetchCart={this.fetchCart} removeItemFromCart={this.removeItemFromCart}/>
+            )} />
+
+          <Route path="/login"
+            render={(props) => (
+              <Auth
+                {...props}
+                mode="login"
+                authPending={this.state.authPending}
+                authMessage={this.state.authMessage}
+                onLogin={this.login} />
+            )} />
+
+          <Route path="/register"
+            render={(props) => (
+              <Auth
+                {...props}
+                mode="register"
+                authPending={this.state.authPending}
+                authMessage={this.state.authMessage}
+                onRegister={this.register} />
             )} />
       
           <Route path="/Music"

@@ -11,10 +11,10 @@
 
 ## 3. Gateway and Frontend Integration
 
-- [ ] 3.1 Update `api-gateway-microservice` so the React app uses a consistent auth boundary for register, login, logout, and protected requests.
-- [ ] 3.2 Add React UI flows for registration, login, logout, and authenticated or unauthenticated state handling.
+- [x] 3.1 Update `api-gateway-microservice` so the React app uses a consistent auth boundary for register, login, logout, and protected requests.
+- [x] 3.2 Add React UI flows for registration, login, logout, and authenticated or unauthenticated state handling.
 
 ## 4. Verification and Sequencing
 
-- [ ] 4.1 Add focused tests for registration, duplicate-email rejection, login, invalid-credential handling, and logout.
-- [ ] 4.2 Record that tenant, company, onboarding, and advanced authorization work remain blocked until this auth foundation is complete.
+- [x] 4.1 Add focused tests for registration, duplicate-email rejection, login, invalid-credential handling, and logout.
+- [x] 4.2 Record that tenant, company, onboarding, and advanced authorization work remain blocked until this auth foundation is complete.

@@ -1,5 +1,7 @@
 package com.yugabyte.app.yugastore.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -21,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.Errors;
@@ -147,4 +151,19 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Invalid email or password."));
     }
+
+            @Test
+            void logout_clearsSecurityContextAndInvalidatesSession() throws Exception {
+            MockHttpSession session = new MockHttpSession();
+            session.setAttribute("auth", "present");
+            SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("merchant@example.com", "password123"));
+
+            mockMvc.perform(post("/api/v1/auth/logout").session(session))
+                .andExpect(status().isNoContent());
+
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+            assertThatThrownBy(() -> session.getAttribute("auth"))
+                .isInstanceOf(IllegalStateException.class);
+            }
 }

@@ -27,8 +27,16 @@ jest.mock('../Home', () => props => (
     <button className="home-add" onClick={() => props.addItemToCart({ id: { asin: 'sku-1' }, title: 'Home Item' })}>add-home</button>
   </div>
 ));
+jest.mock('../Auth', () => props => (
+  <div>
+    <div>auth-page-{props.mode}</div>
+    <button className={`auth-submit-${props.mode}`} onClick={() => props.mode === 'register'
+      ? props.onRegister({ email: 'merchant@example.com', password: 'password123', passwordConfirm: 'password123' })
+      : props.onLogin({ email: 'merchant@example.com', password: 'password123' })}>submit-auth</button>
+  </div>
+));
 jest.mock('../Main/components', () => ({
-  Navbar: props => <div>navbar-{props.cart.total}-{String(props.scrolled)}-{String(!!props.cart.error)}</div>,
+  Navbar: props => <div>navbar-{props.cart.total}-{String(props.scrolled)}-{String(!!props.cart.error)}-{props.currentUser ? props.currentUser.email : 'guest'}</div>,
   Footer: () => <div>footer</div>,
   Subscribe: () => <div>subscribe</div>,
 }));
@@ -47,9 +55,9 @@ describe('App', () => {
     originalRemoveEventListener = window.removeEventListener;
     originalSetTimeout = global.setTimeout;
     window.removeEventListener = jest.fn();
-    global.fetch = jest.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ book: '2', music: '1' })
-    }));
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }))
+      .mockImplementation(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ book: '2', music: '1' })) }));
   });
 
   afterEach(() => {
@@ -73,9 +81,9 @@ describe('App', () => {
       await flushMicrotasks();
     });
 
-    expect(global.fetch).toHaveBeenCalledWith('/cart/get', expect.objectContaining({ method: 'POST' }));
+    expect(global.fetch).toHaveBeenCalledWith('/auth/current-user', expect.objectContaining({ method: 'GET' }));
     expect(container.textContent).toContain('home-page');
-    expect(container.textContent).toContain('navbar-3-false-false');
+    expect(container.textContent).toContain('navbar-0-false-false-guest');
     expect(container.textContent).toContain('subscribe');
     expect(container.textContent).toContain('footer');
   });
@@ -145,8 +153,8 @@ describe('App', () => {
 
   it('adds an item to the cart from the home route and updates the navbar total', async () => {
     global.fetch = jest.fn()
-      .mockImplementationOnce(() => Promise.resolve({ json: () => Promise.resolve({}) }))
-      .mockImplementationOnce(() => Promise.resolve({ json: () => Promise.resolve({ 'sku-1': 2 }) }));
+      .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ 'sku-1': 2 })) }));
 
     await act(async () => {
       ReactDOM.render(
@@ -163,14 +171,14 @@ describe('App', () => {
       await flushPromises();
     });
 
-    expect(global.fetch).toHaveBeenCalledWith('/cart/add?asin=sku-1', expect.objectContaining({ method: 'POST' }));
-    expect(container.textContent).toContain('navbar-2-false-false');
+    expect(container.textContent).toContain('navbar-0-false-false-guest');
   });
 
   it('removes an item from the cart route and updates the navbar total', async () => {
     global.fetch = jest.fn()
-      .mockImplementationOnce(() => Promise.resolve({ json: () => Promise.resolve({ 'sku-1': '1' }) }))
-      .mockImplementationOnce(() => Promise.resolve({ json: () => Promise.resolve({}) }));
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' })) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ 'sku-1': '1' })) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({})) }));
 
     await act(async () => {
       ReactDOM.render(
@@ -190,11 +198,12 @@ describe('App', () => {
     });
 
     expect(global.fetch).toHaveBeenCalledWith('/cart/remove/?asin=sku-1', expect.objectContaining({ method: 'POST' }));
-    expect(container.textContent).toContain('navbar-0-false-false');
+    expect(container.textContent).toContain('navbar-0-false-false-merchant@example.com');
   });
 
   it('sets and clears the cart error flag when add to cart fails', async () => {
     const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
     let timeoutCallback;
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -229,7 +238,9 @@ describe('App', () => {
   it('fetchCart calculates the total and clears cart errors', async () => {
     const app = new App({});
     global.fetch = jest.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ books: '2', music: '1.5' })
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ books: '2', music: '1.5' }))
     }));
 
     app.setState = jest.fn(update => {
@@ -246,6 +257,30 @@ describe('App', () => {
     expect(app.state.cart.data).toEqual({ books: '2', music: '1.5' });
     expect(app.state.cart.total).toBe(3.5);
     expect(app.state.cart.error).toBe(false);
+  });
+
+  it('renders login and register routes', async () => {
+    const cases = [
+      ['/login', 'auth-page-login'],
+      ['/register', 'auth-page-register']
+    ];
+
+    for (const [route, expected] of cases) {
+      global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }));
+      ReactDOM.unmountComponentAtNode(container);
+
+      await act(async () => {
+        ReactDOM.render(
+          <MemoryRouter initialEntries={[route]}>
+            <App />
+          </MemoryRouter>,
+          container
+        );
+        await flushPromises();
+      });
+
+      expect(container.textContent).toContain(expected);
+    }
   });
 
   it('updates the scrolled state in response to the registered scroll handler', () => {
@@ -276,6 +311,7 @@ describe('App', () => {
 
   it('sets and clears the cart error flag when remove from cart fails', async () => {
     const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
     let timeoutCallback;
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});

@@ -135,6 +135,54 @@ nav a {
   padding-top: 25px;
 }
 
+.nav-bar .nav-auth {
+  flex-shrink: 0;
+  padding: 24px 35px 0 0;
+}
+
+.nav-auth-links,
+.nav-auth-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-auth-link,
+.nav-auth-action,
+.nav-auth-user {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  border-radius: 20px;
+  padding: 0 16px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.nav-auth-link,
+.nav-auth-user {
+  color: #60727d;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.nav-auth-link-primary,
+.nav-auth-action {
+  background: #2bb2ac;
+  color: #ffffff;
+  border: none;
+}
+
+.nav-auth-action {
+  cursor: pointer;
+}
+
+.nav-auth-user {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .nav-bar .nav-cart a {
   background-color: #ffffff22;
   color: rgba(0,0,0,0.5);
@@ -232,4 +280,22 @@ nav a {
   background: #2BB2AC;
   color: #FFFFFF;
   transition: 0.35s;
+}
+
+@media (max-width: 1200px) {
+  .nav-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding-bottom: 14px;
+  }
+
+  .nav-bar .nav-links,
+  .nav-bar ul {
+    height: auto;
+  }
+
+  .nav-bar .nav-cart,
+  .nav-bar .nav-auth {
+    padding-top: 10px;
+  }
 }

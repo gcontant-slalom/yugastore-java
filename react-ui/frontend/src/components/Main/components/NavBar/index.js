@@ -26,6 +26,7 @@ class Navbar extends Component {
   render() {
     const { match, location, history } = this.props
     const notIndex = location.pathname!=="/";
+    const currentUser = this.props.currentUser;
     return(
     <nav className={`nav-bar ${this.props.scrolled || notIndex ? 'nav-bar-scrolled' : '' }`}>
       <NavLink to="/">
@@ -56,6 +57,19 @@ class Navbar extends Component {
           {this.props.cart.total > 0 && <span className={`nav-cart-count ${this.props.cart.error ? "nav-cart-count-error": ""}`}>{this.props.cart.total}</span>}
           <Icon icon="cart" color={this.props.scrolled || notIndex ? '#000000' : '#ffffff' }/>Cart
         </NavLink>
+      </div>
+      <div className='nav-auth'>
+        {currentUser ? (
+          <div className="nav-auth-state">
+            <span className="nav-auth-user">{currentUser.email}</span>
+            <button className="nav-auth-action" onClick={this.props.onLogout}>Logout</button>
+          </div>
+        ) : (
+          <div className="nav-auth-links">
+            <NavLink className="nav-auth-link" to="/login">Sign In</NavLink>
+            <NavLink className="nav-auth-link nav-auth-link-primary" to="/register">Register</NavLink>
+          </div>
+        )}
       </div>
     </nav>
     )
