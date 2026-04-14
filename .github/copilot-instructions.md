@@ -136,7 +136,8 @@ Start each in a separate terminal:
 3. `cd products-microservice && ./mvnw spring-boot:run`
 4. `cd checkout-microservice && ./mvnw spring-boot:run`
 5. `cd cart-microservice && ./mvnw spring-boot:run`
-6. `cd react-ui && ./mvnw spring-boot:run`
+6. `cd login-microservice && ./mvnw spring-boot:run`
+7. `cd react-ui && ./mvnw spring-boot:run`
 
 Then open:
 
@@ -171,6 +172,6 @@ When a user asks to start one component, start required dependencies first:
 ### 7) Quick verification checklist
 
 - Confirm processes are listening on expected ports:
-	- Eureka `8761`, UI `8080`, API gateway `8081`, products `8082`, cart `8083`, checkout `8086`.
+	- Eureka `8761`, UI `8080`, API gateway `8081`, products `8082`, cart `8083`, login `8085`, checkout `8086`.
 - Confirm Eureka shows registered services.
 - If catalog endpoints fail, re-check YCQL seed counts in `products`, `product_rankings`, and `product_inventory`.
