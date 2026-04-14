@@ -83,10 +83,67 @@ Use the issue template files, [issue conventions](./references/issue-conventions
    - Use specs to derive acceptance criteria.
    - Use proposal and design only for concise context, not for long narrative issue bodies.
 
-6. Create output.
-   - Create live issues with `gh issue create` unless the user asked for a draft-only run.
-   - Keep titles concise and actionable.
-   - Include file-path references to the OpenSpec change package rather than copying large blocks of text.
+6. Package issue bodies with a shell-safe formatter.
+    - When creating live issues from the terminal, do not inline large markdown bodies into `gh issue create --body` and do not rely on interactive heredocs in a persistent shell.
+    - Materialize each repeated issue section into a temporary content file and render the final markdown body with `./assets/render-issue-body.sh`.
+    - Pass the rendered markdown to GitHub with `gh issue create --body-file <rendered-body.md>`.
+    - Use `raw` for freeform paragraphs or preformatted markdown, `bullets` for one-item-per-line inputs, and `checklist` for done-definition style sections.
+    - Clean up the temporary directory after issue creation succeeds.
+
+7. Create output.
+    - Create live issues with `gh issue create --body-file` unless the user asked for a draft-only run.
+    - Keep titles concise and actionable.
+    - Include file-path references to the OpenSpec change package rather than copying large blocks of text.
+
+## Shell Packaging Helper
+Use [assets/render-issue-body.sh](./assets/render-issue-body.sh) to package issue content into stable markdown before calling GitHub CLI.
+
+Recommended pattern:
+
+```bash
+tmpdir="$(mktemp -d)"
+
+printf '%s\n' \
+   'Add the first merchant signup entry point and contract that creates merchant company or store identity and a tenant context from a shared onboarding link.' \
+   > "$tmpdir/summary.txt"
+
+printf '%s\n' \
+   'Define the supported merchant signup route and minimum onboarding fields.' \
+   'Implement the first-slice tenant creation contract behind that route.' \
+   'Decide whether the first merchant-admin user is created in the same flow or as an immediate follow-up.' \
+   > "$tmpdir/scope.txt"
+
+printf '%s\t%s\t%s\n' \
+   'Summary' 'raw' "$tmpdir/summary.txt" \
+   'Scope' 'bullets' "$tmpdir/scope.txt" \
+   'Acceptance Criteria' 'bullets' "$tmpdir/acceptance.txt" \
+   'OpenSpec Change' 'bullets' "$tmpdir/openspec-change.txt" \
+   'OpenSpec Tasks' 'bullets' "$tmpdir/openspec-tasks.txt" \
+   'Affected Modules' 'bullets' "$tmpdir/modules.txt" \
+   'Reserved Paths' 'bullets' "$tmpdir/paths.txt" \
+   'Dependencies' 'bullets' "$tmpdir/dependencies.txt" \
+   'Verification' 'bullets' "$tmpdir/verification.txt" \
+   'Done Definition' 'checklist' "$tmpdir/done-definition.txt" \
+   > "$tmpdir/sections.tsv"
+
+.github/skills/github-issues-from-openspec/assets/render-issue-body.sh \
+   "$tmpdir/sections.tsv" \
+   "$tmpdir/issue-body.md"
+
+gh issue create \
+   --repo gcontant-slalom/yugastore-java \
+   --title 'STORY: Add Merchant Signup Contract And Tenant Creation Flow' \
+   --label 'type:feature' \
+   --label 'area:auth' \
+   --body-file "$tmpdir/issue-body.md"
+
+rm -rf "$tmpdir"
+```
+
+Manifest format for `render-issue-body.sh`:
+- one tab-separated row per section
+- columns are `Section Title`, `Mode`, and `Content File`
+- comment lines beginning with `#` and blank lines are ignored
 
 ## Label Rules
 Use only labels that already exist in GitHub.
