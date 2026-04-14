@@ -9,6 +9,8 @@ user-invocable: true
 
 Use this skill when work should be driven by GitHub Issues and you need to avoid multiple agents editing the same area at the same time.
 
+All GitHub issue reads and writes must stay within the current repository context. Do not inspect or borrow conventions from a parent, upstream, or similarly named fork unless the user explicitly requests that.
+
 ## When To Use
 - Find the next safe issue to work on
 - Verify whether an issue is blocked by another active path reservation
@@ -43,11 +45,11 @@ For new issues in this repository, the issue should reference its backing OpenSp
 Use the repository ownership map in [path ownership](./references/path-ownership.md) as the default split when issues do not already specify a narrower reservation.
 
 ## Recommended Commands
-- `gh issue list --repo gcontant-slalom/yugastore-java --label ready`
-- `gh issue list --repo gcontant-slalom/yugastore-java --label agent-locked --state open`
-- `gh issue view <number> --repo gcontant-slalom/yugastore-java --json number,title,body,labels,assignees,url,state`
-- `gh issue edit <number> --repo gcontant-slalom/yugastore-java --add-assignee <login> --add-label agent-locked`
-- `gh issue comment <number> --repo gcontant-slalom/yugastore-java --body-file <file>`
+- `gh issue list --repo YugabyteDB-Samples/yugastore-java --label ready`
+- `gh issue list --repo YugabyteDB-Samples/yugastore-java --label agent-locked --state open`
+- `gh issue view <number> --repo YugabyteDB-Samples/yugastore-java --json number,title,body,labels,assignees,url,state`
+- `gh issue edit <number> --repo YugabyteDB-Samples/yugastore-java --add-assignee <login> --add-label agent-locked`
+- `gh issue comment <number> --repo YugabyteDB-Samples/yugastore-java --body-file <file>`
 
 
 ## Custom Agents

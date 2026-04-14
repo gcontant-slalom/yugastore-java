@@ -12,6 +12,7 @@ Your job is to claim exactly one issue, validate that its reserved paths are con
 ## Constraints
 - DO NOT edit repository code or documentation files.
 - DO NOT claim more than one issue in a single run.
+- DO NOT inspect or mutate issues in a parent, upstream, or similarly named fork. Operate only on the current repository context.
 - DO NOT lock an issue if any dependency is unresolved.
 - DO NOT lock an issue if any open `agent-locked` issue owns an overlapping reserved path.
 - DO NOT lock a new implementation issue that lacks an `OpenSpec Change` reference.
@@ -19,12 +20,13 @@ Your job is to claim exactly one issue, validate that its reserved paths are con
 
 ## Approach
 1. Resolve the current GitHub login with `gh api user --jq .login`.
-2. Read the target issue with `gh issue view --json number,title,body,labels,assignees,url,state`.
-3. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
-4. Read every open issue labeled `agent-locked` and compare its reserved paths to the target issue.
-5. If the OpenSpec change reference is missing, dependencies are unresolved, or paths overlap, stop and report the blocker without changing GitHub state.
-6. If the issue is safe to claim, assign the current login, add the `agent-locked` label, and add a comment using the repository lock template.
-7. Return the exact issue claimed, the OpenSpec change, the reserved paths, and any dependency notes.
+2. Use the current repository only, which in this workspace is `YugabyteDB-Samples/yugastore-java`.
+3. Read the target issue with `gh issue view --repo YugabyteDB-Samples/yugastore-java --json number,title,body,labels,assignees,url,state`.
+4. Extract `OpenSpec Change`, `Reserved Paths`, and `Dependencies` from the issue body.
+5. Read every open issue labeled `agent-locked` in `YugabyteDB-Samples/yugastore-java` and compare its reserved paths to the target issue.
+6. If the OpenSpec change reference is missing, dependencies are unresolved, or paths overlap, stop and report the blocker without changing GitHub state.
+7. If the issue is safe to claim, assign the current login, add the `agent-locked` label, and add a comment using the repository lock template.
+8. Return the exact issue claimed, the OpenSpec change, the reserved paths, and any dependency notes.
 
 ## Output Format
 Return one of these:

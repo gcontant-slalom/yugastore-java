@@ -43,6 +43,7 @@
 ## GitHub Issue Coordination
 
 - For issue-driven work, only select tasks from GitHub Issues instead of starting ad hoc code changes.
+- When inspecting issues, labels, templates, or PRs for workflow decisions, use only the current repository context, not a parent, upstream, or similarly named fork. In this workspace that repository is `YugabyteDB-Samples/yugastore-java`.
 - For new implementation work, use the OpenSpec change package referenced by the issue as the primary execution context.
 - If an issue lacks an OpenSpec change reference, stop and create or update the backing OpenSpec change before coding.
 - Before editing code for a GitHub issue, confirm the issue declares reserved paths and does not conflict with another open issue labeled `agent-locked`.
@@ -57,7 +58,7 @@
 - When architectural documentation is present, convert it into Mermaid diagrams under `resources/prds/diagrams/` and reference those files from the PRD.
 - After a PRD is clear enough, create one or more bounded OpenSpec changes under `openspec/changes/` before generating GitHub issues.
 - Generate GitHub issues from OpenSpec tasks, not directly from the PRD.
-- Before generating any GitHub issue output from an OpenSpec change, inspect `.github/ISSUE_TEMPLATE/`, run `gh issue list`, and inspect representative issues with `gh issue view` so the issue structure matches the repository's existing conventions.
+- Before generating any GitHub issue output from an OpenSpec change, inspect `.github/ISSUE_TEMPLATE/`, run `gh issue list`, and inspect representative issues with `gh issue view` against the current repository only so the issue structure matches this repository's conventions.
 - Reuse only existing GitHub labels unless the user explicitly asks to change the taxonomy.
 - If the source material is ambiguous, stop and ask clarifying questions rather than guessing at requirements or issue scope.
 

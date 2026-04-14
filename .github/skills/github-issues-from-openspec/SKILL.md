@@ -9,6 +9,8 @@ user-invocable: true
 
 Use this skill when an OpenSpec change already exists and the next step is to create or update GitHub issues for execution.
 
+All GitHub issue and label discovery for this skill must use the current repository only. Do not inspect a parent, upstream, or similarly named fork unless the user explicitly asks.
+
 ## Responsibility
 This skill is responsible for OpenSpec to GitHub issue conversion only.
 
@@ -36,9 +38,9 @@ NEEDS OPENSPEC UPDATE:
 Before generating any issue output, always do all of the following:
 
 1. Inspect issue templates in `.github/ISSUE_TEMPLATE/`.
-2. Run `gh issue list --repo gcontant-slalom/yugastore-java`.
-3. Inspect representative issues with `gh issue view <id> --repo gcontant-slalom/yugastore-java --json number,title,body,labels,url,state`.
-4. Review current labels with `gh label list --repo gcontant-slalom/yugastore-java`.
+2. Run `gh issue list --repo YugabyteDB-Samples/yugastore-java`.
+3. Inspect representative issues with `gh issue view <id> --repo YugabyteDB-Samples/yugastore-java --json number,title,body,labels,url,state`.
+4. Review current labels with `gh label list --repo YugabyteDB-Samples/yugastore-java`.
 
 Use the issue template files, [issue conventions](./references/issue-conventions.md), and live GitHub as the source of truth.
 
