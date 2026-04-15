@@ -7,8 +7,10 @@ Derived from [resources/prds/merchant-tenant-foundation.md](resources/prds/merch
 ## What Changes
 
 - Introduce explicit merchant company and store context as a post-auth product slice.
-- Add a merchant company signup entry point that creates tenant context from a shared onboarding link.
-- Resolve tenant context from a browser-visible path that works for local demos.
+- Add a merchant company signup entry point at a tenant-specific path that creates tenant context from a shared onboarding link.
+- Resolve tenant context from a canonical browser-visible slug path that works for local demos.
+- Preserve the shared storefront root at `/` while defining tenant storefront routes at `/{tenantSlug}/` and merchant signup routes at `/{tenantSlug}/signup`.
+- Validate requested tenant slugs for uniqueness and supported format before tenant creation succeeds.
 - Replace targeted hard-coded demo-user assumptions with a request-context contract derived from authenticated user identity.
 - Persist tenant ownership on targeted merchant-owned records touched by the first slice.
 - Depend on completed `merchant-auth-foundation` work before this change begins.

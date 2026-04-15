@@ -6,14 +6,15 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 ## 1. Merchant Onboarding Contract
 
-- [ ] 1.1 Define the merchant company signup route, minimum onboarding fields, and first-slice tenant creation contract.
+- [ ] 1.1 Define the canonical merchant signup route at `/{tenantSlug}/signup`, minimum onboarding fields, slug validation rules, and first-slice tenant creation contract.
 - [ ] 1.2 Decide whether the first merchant-admin user is created in the same flow or as an immediate follow-up and document the resulting contract.
 
 ## 2. Tenant Context Contract
 
 - [ ] 2.1 Define the merchant company, store, and request-context contract for the first slice and map current demo data to a default merchant context.
-- [ ] 2.2 Add path-based tenant routing for the local demo flow in `react-ui` and `api-gateway-microservice`.
+- [ ] 2.2 Add canonical path-based tenant routing for `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup` in `react-ui` and `api-gateway-microservice`.
 - [ ] 2.3 Identify the targeted request path and replace remaining hard-coded demo-user assumptions with auth-derived tenant context.
+- [ ] 2.4 Add explicit invalid-slug and unknown-tenant handling so tenant routes do not silently fall back to the shared root storefront.
 
 ## 3. Persistence Foundation
 

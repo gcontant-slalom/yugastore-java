@@ -9,7 +9,7 @@ This design keeps the tenant change focused on post-auth company, store, onboard
 **Goals:**
 - Establish a company or store ownership model on top of authenticated user identity.
 - Add a bounded merchant signup path that can be shared as a link.
-- Resolve tenant context from a browser-visible path for local demos.
+- Resolve tenant context from a browser-visible slug path for local demos.
 - Carry tenant context through the targeted request path instead of relying on hard-coded demo-user values.
 - Persist tenant ownership on targeted merchant-owned records in the first slice.
 - Keep the change small enough to support dependency-ordered implementation and later issue generation.
@@ -54,6 +54,22 @@ Recommended decision: use path-based tenant selection for the first implementati
 - Alternative considered: subdomain or custom-domain tenant routing immediately.
 - Rejected for now because it adds setup complexity that is not required to prove the workflow.
 
+### 4a. Make the slug route contract canonical and explicit
+
+Recommended decision: reserve the demo storefront root at `/`, tenant storefront routes at `/{tenantSlug}/`, and merchant signup routes at `/{tenantSlug}/signup` as the only supported local first-slice route shapes.
+
+- Why: the current planning says path-based routing is supported, but the route shapes need to be fixed so frontend routing, gateway handling, verification, and merchant-facing URLs do not drift. Keeping `/` as the demo store also prevents tenant failures from silently collapsing into a generic landing experience.
+- Alternative considered: allow multiple equivalent route patterns such as `/store/{tenantSlug}` or a root-level signup path.
+- Rejected because multiple valid patterns would make demos and downstream tenant resolution ambiguous.
+
+### 4b. Validate slug uniqueness and format during onboarding
+
+Recommended decision: require tenant slugs to be unique, lowercase, browser-safe identifiers created during merchant signup and rejected explicitly when invalid or already taken.
+
+- Why: merchants need a stable storefront path and the platform needs deterministic tenant resolution.
+- Alternative considered: generate opaque tenant ids internally and let friendly slugs be optional.
+- Rejected for now because the first slice needs a human-readable URL that can be shared directly.
+
 ### 5. Resolve tenant context at the gateway boundary using authenticated identity and route context as input
 
 Recommended decision: treat tenant context as a request-scoped contract introduced at or before the API gateway and derived from the authenticated user or merchant association plus the supported tenant route.
@@ -81,6 +97,7 @@ Recommended decision: preserve current demo usability by mapping existing sample
 ## Migration Plan
 
 - Add a merchant onboarding route and company or store creation contract for the first slice.
+- Fix the canonical route contract to `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup`.
 - Add tenant ownership fields to targeted merchant-owned data structures and seed assets.
 - Map current demo data to a default merchant or store context so existing sample behavior remains testable.
 - Update frontend and gateway routing so a supported path resolves tenant context for local demos.
@@ -92,5 +109,6 @@ Recommended decision: preserve current demo usability by mapping existing sample
 
 - What minimum merchant-company fields are required beyond company or store name?
 - Should merchant onboarding create its first merchant-admin account in the same flow or as a follow-up step?
+- What exact slug validation rules should apply beyond lowercase browser-safe formatting and uniqueness?
 - Which first-slice endpoints beyond product and checkout must be tenant-aware to be considered complete?
 - Does `cart-microservice` need to participate in the initial foundation, or can it be deferred to a later change?

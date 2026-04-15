@@ -1,16 +1,21 @@
 ## ADDED Requirements
 
 ### Requirement: Merchant company signup creates tenant context
-The system SHALL expose a merchant company signup entry point that creates a merchant company or store and a corresponding tenant context for the first slice.
+The system SHALL expose a merchant company signup entry point at a tenant-specific slug path that creates a merchant company or store and a corresponding tenant context for the first slice.
 
 #### Scenario: Shared merchant signup entry point starts onboarding
-- **WHEN** an internal team member shares the supported merchant signup link with a prospective merchant
+- **WHEN** an internal team member shares a supported merchant signup link such as `/my-test-store/signup` with a prospective merchant
 - **THEN** the merchant can open a dedicated onboarding route for company or store signup
 
 #### Scenario: Successful merchant signup creates tenant context
-- **WHEN** a merchant submits the required company or store details through the onboarding entry point
+- **WHEN** a merchant submits the required company or store details and requested slug through the onboarding entry point
 - **THEN** the system creates a merchant company or store record
 - **AND** the system creates a unique tenant context associated with that merchant
+- **AND** the resulting tenant is bound to the requested slug when that slug passes validation
+
+#### Scenario: Duplicate or invalid requested slug is rejected
+- **WHEN** a merchant submits a signup request with a slug that is invalid or already assigned to another tenant
+- **THEN** the system rejects the signup request with a clear invalid-slug or duplicate-slug outcome
 
 ### Requirement: Merchant company or store identity is distinct from shopper identity
 The system SHALL represent merchant company or store ownership separately from shopper identity for the initial white-label foundation.
@@ -24,15 +29,32 @@ The system SHALL represent merchant company or store ownership separately from s
 - **THEN** those identities can be associated to one shared merchant company or store context rather than being treated as separate tenants
 
 ### Requirement: Path-based tenant route resolves tenant context
-The system SHALL resolve tenant context from a supported browser path for the first slice.
+The system SHALL resolve tenant context from canonical browser slug routes for the first slice.
+
+#### Scenario: Shared root storefront remains distinct from tenant storefronts
+- **WHEN** a browser accesses `/`
+- **THEN** the application serves the demo store behavior
+- **AND** the request is not treated as a tenant storefront route by default
 
 #### Scenario: Supported tenant path resolves the active tenant
-- **WHEN** a shopper or merchant accesses a supported tenant path in the browser
+- **WHEN** a shopper or merchant accesses a supported tenant storefront path such as `/my-test-store/` or tenant signup path such as `/my-test-store/signup`
 - **THEN** the application resolves the corresponding tenant context for downstream requests in the targeted flow
 
 #### Scenario: Unknown tenant path is rejected explicitly
-- **WHEN** the application receives a supported tenant route whose tenant identifier cannot be resolved
+- **WHEN** the application receives a canonical tenant route whose tenant slug cannot be resolved
 - **THEN** the request is rejected or routed to a clear invalid-tenant outcome instead of falling back silently
+
+### Requirement: Tenant slugs use a stable browser-safe contract
+The system SHALL use tenant slugs as stable browser-visible identifiers for the first slice.
+
+#### Scenario: Tenant slug uses supported format
+- **WHEN** the system accepts a tenant slug for creation
+- **THEN** the slug uses the supported browser-safe format for the first slice
+- **AND** the stored slug can be used directly in storefront and signup URLs
+
+#### Scenario: Tenant slug remains unique
+- **WHEN** the platform stores a tenant slug
+- **THEN** no other tenant can be created with that same slug
 
 ### Requirement: Tenant context propagates to targeted merchant-owned operations
 The system SHALL resolve and propagate tenant context for merchant-owned operations on the targeted request path instead of relying on hard-coded demo-user assumptions.

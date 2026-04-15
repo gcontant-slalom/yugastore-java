@@ -1,0 +1,23 @@
+flowchart LR
+    Shopper[Shopper Browser] --> Root[Root Storefront /]
+    Shopper --> TenantStore[Tenant Storefront /{tenantSlug}/]
+    Merchant[Merchant Browser] --> TenantSignup[Tenant Signup /{tenantSlug}/signup]
+    Merchant --> TenantUpload[Tenant Product Upload]
+
+    Root --> UI[react-ui]
+    TenantStore --> UI
+    TenantSignup --> UI
+    TenantUpload --> UI
+
+    UI --> Gateway[api-gateway-microservice]
+    Gateway --> TenantResolver[Tenant Slug Resolver]
+    TenantResolver --> Products[products-microservice]
+    TenantResolver --> Checkout[checkout-microservice]
+    TenantResolver --> Login[login-microservice]
+
+    TenantUpload --> CatalogImport[Product Upload Contract]
+    CatalogImport --> Products
+
+    Products --> Catalog[(Tenant-owned product catalog)]
+    Checkout --> Orders[(Tenant-owned checkout data)]
+    Login --> Merchants[(Merchant and shopper identities)]

@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant Merchant as Merchant
+    participant UI as react-ui
+    participant Gateway as API Gateway
+    participant Auth as Login Service
+    participant Tenant as Tenant Context
+    participant Products as Products Service
+    participant Shopper as Shopper
+    participant Checkout as Checkout Service
+
+    Merchant->>UI: Open /my-test-store/signup
+    UI->>Gateway: Submit signup with tenant slug and merchant details
+    Gateway->>Auth: Create merchant account
+    Gateway->>Tenant: Create tenant for slug my-test-store
+    Tenant-->>Gateway: Tenant created
+    Gateway-->>UI: Signup complete
+
+    Merchant->>UI: Upload products for my-test-store
+    UI->>Gateway: Upload product file
+    Gateway->>Products: Create tenant-owned products
+    Products-->>Gateway: Upload accepted
+    Gateway-->>UI: Upload result
+
+    Shopper->>UI: Open /my-test-store/
+    UI->>Gateway: Request storefront for my-test-store
+    Gateway->>Products: Fetch products for tenant my-test-store
+    Products-->>Gateway: Tenant catalog only
+    Gateway-->>UI: Render tenant storefront
+
+    Shopper->>UI: Purchase product
+    UI->>Gateway: Checkout request with tenant my-test-store
+    Gateway->>Checkout: Create tenant-scoped order
+    Checkout-->>Gateway: Order accepted
+    Gateway-->>UI: Purchase confirmation
