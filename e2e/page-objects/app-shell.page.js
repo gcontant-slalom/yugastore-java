@@ -16,8 +16,10 @@ class AppShellPage {
     await expect(this.page.locator('.nav-auth-user')).toHaveCount(0);
   }
 
-  async expectAuthenticated(email) {
-    await expect(this.page.getByRole('link', { name: 'Merchant Setup' })).toBeVisible();
+  async expectAuthenticated(email, merchantName) {
+    if (merchantName) {
+      await expect(this.page.getByRole('link', { name: `${merchantName} Setup` })).toBeVisible();
+    }
     await expect(this.page.locator('.nav-auth-user')).toHaveText(email);
     await expect(this.page.getByRole('button', { name: 'Logout' })).toBeVisible();
   }

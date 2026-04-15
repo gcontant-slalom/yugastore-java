@@ -106,7 +106,7 @@ flowchart LR
 
 - The repository currently contains seven runnable modules: Eureka service discovery, API gateway, products, cart, checkout, login, and the React UI wrapper.
 - The product and checkout services use YCQL, while the cart and login services use YSQL-compatible access.
-- The local happy path documented in this repository is still centered on Eureka, the API gateway, products, checkout, cart, and the React UI. The login service exists in the repo, but it is still incomplete and is not part of the primary startup flow.
+- The local happy path documented in this repository includes Eureka, the API gateway, products, checkout, cart, login, and the React UI. Start `login-microservice` locally when testing registration, login, logout, or merchant onboarding flows.
 - The checked-in YSQL schema currently creates the `shopping_cart` table only. YCQL schema and seed data are more complete than the YSQL setup.
 - The React application is packaged through the Spring Boot `react-ui` module, with the frontend source living under `react-ui/frontend`.
 - The Docker helper script starts Eureka, API gateway, products, checkout, cart, and the React UI. It does not currently start the login service.
@@ -254,7 +254,18 @@ $ cd cart-microservice/
 $ ./mvnw spring-boot:run
 ```
 
-## Step 7: Start the UI
+## Step 7: Start the login microservice
+
+To run the login microservice, do the following in a separate shell:
+
+```
+$ cd login-microservice/
+$ ./mvnw spring-boot:run
+```
+
+The auth routes used by the React UI and API gateway depend on this service. If `login-microservice` is not running, registration and login requests will fail through the gateway.
+
+## Step 8: Start the UI
 
 To start the Spring Boot wrapper that serves the React build, run the following in a separate shell:
 

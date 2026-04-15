@@ -27,6 +27,13 @@ class Navbar extends Component {
     const { location } = this.props;
     const notIndex = location.pathname!=="/";
     const currentUser = this.props.currentUser;
+    const merchantSetupLabel = this.props.merchantContext && this.props.merchantContext.companyName
+      ? this.props.merchantContext.companyName + ' Setup'
+      : 'Merchant Setup';
+    // Always provide a path, fallback to generic if tenantKey missing
+    const merchantSetupPath = this.props.merchantContext && this.props.merchantContext.tenantKey
+      ? '/' + this.props.merchantContext.tenantKey + '/signup'
+      : '/merchant/signup';
     return(
     <nav className={`nav-bar ${this.props.scrolled || notIndex ? 'nav-bar-scrolled' : '' }`}>
       <NavLink to="/">
@@ -61,9 +68,7 @@ class Navbar extends Component {
       <div className='nav-auth'>
         {currentUser ? (
           <div className="nav-auth-state">
-            {this.props.merchantContext && this.props.merchantContext.tenantKey && (
-              <span className="nav-auth-user">/{this.props.merchantContext.tenantKey}/signup</span>
-            )}
+            <NavLink className="nav-auth-link" to={merchantSetupPath}>{merchantSetupLabel}</NavLink>
             <span className="nav-auth-user">{currentUser.email}</span>
             <button className="nav-auth-action" onClick={this.props.onLogout}>Logout</button>
           </div>
