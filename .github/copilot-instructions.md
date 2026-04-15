@@ -27,9 +27,13 @@
 
 ## Regression Workflow
 
+- Use the supported regression command surface in `docs/e2e-command-surface.md` and the current journey coverage in `docs/e2e-scope-matrix.md` when selecting regression verification for covered changes.
 - When a supported end-to-end regression command exists for the touched flow or covered module, run the relevant documented regression scope before considering the work complete.
 - Prefer the narrowest supported regression scope that still covers the changed behavior, and use the broader supported scope for cross-service or user-journey changes.
+- In agent output, report regression verification explicitly as passed, blocked, or skipped. Name the scope or command that ran, or name the blocker that prevented it from running.
 - If the relevant regression scope cannot run, report exactly what was blocked, what did run, and why the remaining verification could not be completed. Do not imply the regression suite passed when it did not run.
+- If only partial regression verification is possible, report what ran successfully, what did not run, and why the remaining verification stayed blocked or unavailable.
+- Follow the regression test governance in `docs/e2e-governance.md` when changing existing regression tests or workflow guidance tied to those tests.
 - Do not relax, remove, or materially repurpose an existing regression test unless the user or the backing issue explicitly authorizes that change.
 - Any change to an existing regression test must explain whether the product behavior changed, the previous test was incorrect, or the test needed to be re-scoped for a documented reason.
 - Do not narrow regression assertions just to make a failing test pass; preserve or strengthen coverage when practical.
