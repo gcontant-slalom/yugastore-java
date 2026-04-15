@@ -13,6 +13,11 @@ The system SHALL expose a merchant company signup entry point at a tenant-specif
 - **AND** the system creates a unique tenant context associated with that merchant
 - **AND** the resulting tenant is bound to the requested slug when that slug passes validation
 
+#### Scenario: Successful merchant signup assigns the current authenticated user as first merchant-admin
+- **WHEN** an already authenticated user successfully completes merchant signup for a new tenant
+- **THEN** the system assigns that same authenticated user to the tenant as its first merchant-admin membership in the same flow
+- **AND** the flow does not require a separate follow-up user-creation step to establish the initial merchant-admin
+
 #### Scenario: Duplicate or invalid requested slug is rejected
 - **WHEN** a merchant submits a signup request with a slug that is invalid or already assigned to another tenant
 - **THEN** the system rejects the signup request with a clear invalid-slug or duplicate-slug outcome
@@ -62,6 +67,11 @@ The system SHALL resolve tenant context from canonical browser slug routes for t
 #### Scenario: Supported tenant path resolves the active tenant
 - **WHEN** a shopper or merchant accesses a supported tenant storefront path such as `/my-test-store/` or tenant signup path such as `/my-test-store/signup`
 - **THEN** the application resolves the corresponding tenant context for downstream requests in the targeted flow
+
+#### Scenario: Canonical tenant browser routes use one public gateway slug lookup
+- **WHEN** `react-ui` receives a canonical tenant browser route for `/{tenantSlug}/` or `/{tenantSlug}/signup`
+- **THEN** tenant resolution uses the public gateway merchant-context lookup keyed by that slug
+- **AND** the shared root path `/` does not require tenant lookup
 
 #### Scenario: Unknown tenant path is rejected explicitly
 - **WHEN** the application receives a canonical tenant route whose tenant slug cannot be resolved

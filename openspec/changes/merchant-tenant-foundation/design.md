@@ -46,6 +46,14 @@ Recommended decision: start with a merchant onboarding route that can be shared 
 - Alternative considered: one-time invitation or approval-token flows.
 - Rejected for now because they add scope without changing the first demo outcome.
 
+### 3a. Bind the first merchant-admin to the current authenticated user in the same signup flow
+
+Recommended decision: the first merchant-admin is not created as a separate user-creation step. The onboarding flow requires an already authenticated user and, on successful tenant creation, immediately binds that same user to the new tenant as its first `MERCHANT_ADMIN` membership.
+
+- Why: the auth foundation already provides a real session-backed user identity, and the current implementation uses that identity to create both the tenant record and its initial admin membership atomically.
+- Alternative considered: create a brand-new merchant-admin account inside merchant signup, or defer admin assignment to a later follow-up step.
+- Rejected because both approaches would widen the first slice into separate account-provisioning workflow that is not present in the code or required for the current demo path.
+
 ### 4. Resolve tenant context from a path-based browser route for the first slice
 
 Recommended decision: use path-based tenant selection for the first implementation and local demo, then allow domain-based routing later if the product needs it.
@@ -61,6 +69,7 @@ Recommended decision: reserve the demo storefront root at `/`, tenant storefront
 - Why: the current planning says path-based routing is supported, but the route shapes need to be fixed so frontend routing, gateway handling, verification, and merchant-facing URLs do not drift. Keeping `/` as the demo store also prevents tenant failures from silently collapsing into a generic landing experience.
 - Alternative considered: allow multiple equivalent route patterns such as `/store/{tenantSlug}` or a root-level signup path.
 - Rejected because multiple valid patterns would make demos and downstream tenant resolution ambiguous.
+- Implementation note: `react-ui` owns browser entry routing for `/`, `/{tenantSlug}`, and `/{tenantSlug}/signup`, while `api-gateway-microservice` provides the canonical slug-resolution contract at `/api/v1/merchant-context/tenant/{tenantKey}` so tenant storefront routes resolve through one public gateway lookup instead of service-specific route logic.
 
 ### 4b. Validate slug uniqueness and format during onboarding
 
@@ -127,8 +136,10 @@ Recommended decision: keep the first-slice merchant context intentionally small 
 ## Migration Plan
 
 - Add a merchant onboarding route and company or store creation contract for the first slice.
+- Require an authenticated user before merchant signup submission and assign that same user as the first `MERCHANT_ADMIN` membership in the newly created tenant.
 - Keep the first-slice merchant-context response limited to `tenantId`, `tenantKey`, `companyName`, and `merchantAdminUserId`, with user-to-tenant links represented separately through membership.
 - Fix the canonical route contract to `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup`.
+- Keep canonical path resolution split cleanly: browser route handling lives in `react-ui`, and public tenant lookup for those routes lives at the gateway merchant-context endpoint keyed by `tenantKey`.
 - Ensure the onboarding page loads with a clean form state unless the user has just completed a successful tenant-creation submit in the current flow.
 - Add tenant ownership fields to targeted merchant-owned data structures and seed assets.
 - Treat the existing `cronos` sample catalog and storefront behavior at `/` as the implicit default merchant context so existing sample behavior remains testable while explicit ownership rollout is still pending.
