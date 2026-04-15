@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,9 +30,10 @@ public class ProductCatalogController {
   ProductRankingService productRankingService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/product/{asin}", produces = "application/json")
-  public ProductMetadata getProductDetails(@PathVariable String asin) {
-    ProductMetadata productMetadata = productService.findById(asin).get();
-    return productMetadata;
+  public ResponseEntity<ProductMetadata> getProductDetails(@PathVariable String asin) {
+    return productService.findById(asin)
+        .map(productMetadata -> new ResponseEntity<>(productMetadata, HttpStatus.OK))
+        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/products", produces = "application/json")

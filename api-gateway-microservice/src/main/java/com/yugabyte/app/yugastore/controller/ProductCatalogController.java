@@ -38,6 +38,9 @@ public class ProductCatalogController {
   @RequestMapping(method = RequestMethod.GET, value = "/product/{asin}", produces = "application/json")
   public @ResponseBody ResponseEntity<ProductMetadata> getProductDetails(@PathVariable("asin") String asin) {
     ProductMetadata productMetadata = productCatalogServiceRest.getProductDetails(asin);
+    if (productMetadata == null) {
+      return new ResponseEntity<ProductMetadata>(HttpStatus.NOT_FOUND);
+    }
     return new ResponseEntity<ProductMetadata>(productMetadata, HttpStatus.OK);
   }
 

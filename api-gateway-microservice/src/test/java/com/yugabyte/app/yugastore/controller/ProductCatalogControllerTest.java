@@ -50,6 +50,14 @@ class ProductCatalogControllerTest {
     }
 
     @Test
+    void getProductDetails_whenMissing_returns404() throws Exception {
+        when(productCatalogServiceRest.getProductDetails("MISSING")).thenReturn(null);
+
+        mockMvc.perform(get("/api/v1/product/MISSING"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getProducts_returns200WithList() throws Exception {
         List<ProductMetadata> products = List.of(
                 buildProduct("B001", "Title 1", 5.0),

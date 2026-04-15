@@ -59,6 +59,18 @@ class DashboardRestConsumerTest {
 	}
 
 	@Test
+	void getProductDetails_whenDownstreamReturns404_returnsEmptyJsonObject() {
+		server.expect(requestTo("http://localhost:8081/api/v1/product/MISSING"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond(withStatus(HttpStatus.NOT_FOUND)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"error\":\"not found\"}"));
+
+		String response = dashboardRestConsumer.getProductDetails("MISSING");
+
+		assertThat(response).isEqualTo("{}");
+	}
+	
 	void createMerchantSignup_targetsGatewayMerchantSignupRoute() {
 		server.expect(requestTo("http://localhost:8081/api/v1/merchant-signup"))
 				.andExpect(method(HttpMethod.POST))

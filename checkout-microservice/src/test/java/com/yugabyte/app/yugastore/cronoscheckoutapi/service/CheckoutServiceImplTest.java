@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -99,6 +100,24 @@ class CheckoutServiceImplTest {
         assertThatThrownBy(() -> checkoutService.checkout("42"))
                 .isInstanceOf(NotEnoughProductsInStockException.class)
                 .hasMessageContaining("Gadget X");
+    }
+
+    @Test
+    void checkout_whenProductTitleContainsApostrophe_escapesCqlLiteral()
+            throws NotEnoughProductsInStockException {
+        Map<String, Integer> cart = new HashMap<>(Map.of("B001", 1));
+        ProductInventory inventory = buildInventory("B001", 10);
+        ProductMetadata product = buildProduct("B001", "Cassell's Standard Latin Dictionary", 17.96);
+
+        when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(cart);
+        when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
+        when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
+
+        checkoutService.checkout("42");
+
+        ArgumentCaptor<String> statementCaptor = ArgumentCaptor.forClass(String.class);
+        verify(cqlOperations).execute(statementCaptor.capture());
+        assertThat(statementCaptor.getValue()).contains("Cassell''s Standard Latin Dictionary");
     }
 
     private ProductInventory buildInventory(String id, int quantity) {

@@ -55,6 +55,14 @@ class ProductCatalogControllerTest {
     }
 
     @Test
+    void getProductDetails_whenAsinMissing_returnsNotFound() throws Exception {
+        when(productService.findById("MISSING")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/products-microservice/product/MISSING"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getProducts_returnsProductList() throws Exception {
         List<ProductMetadata> products = List.of(
                 buildProduct("B001", "Title 1", 5.0),
