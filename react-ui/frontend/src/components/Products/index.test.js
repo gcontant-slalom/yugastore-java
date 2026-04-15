@@ -225,6 +225,21 @@ describe('Products', () => {
     expect(productNames).toEqual(['Higher Reviews', 'Lower Reviews']);
   });
 
+  it('uses tenant-scoped product endpoints and item links when a tenant storefront is active', async () => {
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter>
+          <Products category="Books" tenantKey="northwind-books" addItemToCart={jest.fn()} />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith('/tenant/northwind-books/products/category/Books?limit=12&offset=0');
+    expect(container.querySelector('a').getAttribute('href')).toBe('/northwind-books/item/asin-1');
+  });
+
   it('returns the expected labels for each supported sort name', () => {
     const products = new Products({});
 

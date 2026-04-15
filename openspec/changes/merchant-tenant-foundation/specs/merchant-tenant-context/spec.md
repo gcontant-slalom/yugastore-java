@@ -45,6 +45,11 @@ The system SHALL represent merchant company or store ownership separately from s
 - **WHEN** the platform resolves merchant-admin identities for the same merchant organization
 - **THEN** those identities can be associated to one shared merchant company or store context rather than being treated as separate tenants
 
+#### Scenario: First-slice merchant context uses the bounded tenant response shape
+- **WHEN** the platform creates or resolves merchant context in this first slice
+- **THEN** the returned merchant context identifies the tenant with `tenantId`, `tenantKey`, and `companyName`
+- **AND** the current merchant-admin user is exposed separately from the tenant as `merchantAdminUserId`
+
 ### Requirement: Path-based tenant route resolves tenant context
 The system SHALL resolve tenant context from canonical browser slug routes for the first slice.
 
@@ -52,6 +57,7 @@ The system SHALL resolve tenant context from canonical browser slug routes for t
 - **WHEN** a browser accesses `/`
 - **THEN** the application serves the demo store behavior
 - **AND** the request is not treated as a tenant storefront route by default
+- **AND** the existing `cronos` sample dataset is treated as the default merchant context for that shared root storefront
 
 #### Scenario: Supported tenant path resolves the active tenant
 - **WHEN** a shopper or merchant accesses a supported tenant storefront path such as `/my-test-store/` or tenant signup path such as `/my-test-store/signup`
@@ -79,6 +85,11 @@ The system SHALL resolve and propagate tenant context for merchant-owned operati
 #### Scenario: Gateway passes tenant context downstream
 - **WHEN** a tenant-aware merchant or storefront request enters the targeted request path
 - **THEN** the API gateway passes merchant company or store context to the downstream service calls touched by this change
+
+#### Scenario: Gateway keeps tenant context distinct from authenticated user identity
+- **WHEN** the gateway resolves tenant context for a tenant-aware request in the first bounded flow
+- **THEN** it forwards merchant tenant context separately from any authenticated user identity already used by other contracts
+- **AND** downstream services touched by this change do not need to infer tenant ownership from a hard-coded demo user
 
 #### Scenario: Missing tenant context is rejected explicitly
 - **WHEN** a merchant-owned endpoint touched by this change receives a request without resolvable tenant context

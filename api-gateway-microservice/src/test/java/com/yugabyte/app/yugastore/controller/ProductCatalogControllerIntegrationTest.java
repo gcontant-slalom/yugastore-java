@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.yugabyte.app.yugastore.rest.clients.ProductCatalogRestClient;
+import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import com.yugabyte.app.yugastore.service.impl.ProductCatalogServiceRestImpl;
 
 import feign.FeignException;
@@ -32,6 +33,9 @@ class ProductCatalogControllerIntegrationTest {
 
     @MockBean
     private ProductCatalogRestClient productCatalogRestClient;
+
+    @MockBean
+    private AuthServiceRest authServiceRest;
 
     @Test
     void getProductDetails_whenDownstreamReturns404_returns404() throws Exception {

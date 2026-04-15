@@ -39,9 +39,30 @@ public class CronosProductsController {
 		return dashboardRestConsumer.getProductsByCategory(category, limit, offset);
 	}
 
+	@GetMapping("/tenant/{tenantKey}/products")
+	public String getTenantProducts(@PathVariable("tenantKey") String tenantKey,
+			@RequestParam("limit") int limit,
+			@RequestParam("offset") int offset) {
+		return dashboardRestConsumer.getTenantProducts(tenantKey, limit, offset);
+	}
+
+	@GetMapping("/tenant/{tenantKey}/products/category/{category}")
+	public String getTenantProductsByCategory(@PathVariable("tenantKey") String tenantKey,
+			@PathVariable("category") String category,
+			@RequestParam("limit") int limit,
+			@RequestParam("offset") int offset) {
+		return dashboardRestConsumer.getTenantProductsByCategory(tenantKey, category, limit, offset);
+	}
+
   @RequestMapping(method = RequestMethod.GET, value = "/products/details")
   public @ResponseBody String getProductDetails(@RequestParam("asin") String asin) {
     return dashboardRestConsumer.getProductDetails(asin);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/tenant/{tenantKey}/products/details")
+  public @ResponseBody String getTenantProductDetails(@PathVariable("tenantKey") String tenantKey,
+      @RequestParam("asin") String asin) {
+    return dashboardRestConsumer.getTenantProductDetails(tenantKey, asin);
   }
 
   @PostMapping("/cart/add")
@@ -114,6 +135,11 @@ public class CronosProductsController {
 	public ResponseEntity<String> getMerchantContexts(HttpSession session) {
 		AuthUser authUser = requireAuthenticatedUser(session);
 		return dashboardRestConsumer.getMerchantContexts(authUser.getUserId());
+	}
+
+	@GetMapping("/api/v1/merchant-context/tenant/{tenantKey}")
+	public ResponseEntity<String> getMerchantContextForTenantKey(@PathVariable("tenantKey") String tenantKey) {
+		return dashboardRestConsumer.getMerchantContextForTenantKey(tenantKey);
 	}
 
 	@GetMapping("/auth/current-user")

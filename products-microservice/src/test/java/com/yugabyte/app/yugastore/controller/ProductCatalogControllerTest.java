@@ -116,6 +116,19 @@ class ProductCatalogControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
+    @Test
+    void getProducts_acceptsTenantContextHeaders() throws Exception {
+        when(productService.findAllProductsPageable(2, 0)).thenReturn(List.of(buildProduct("B001", "Title 1", 5.0)));
+
+        mockMvc.perform(get("/products-microservice/products")
+                        .header("X-Tenant-Key", "northwind-books")
+                        .header("X-Merchant-Company-Name", "Northwind Books")
+                        .param("limit", "2")
+                        .param("offset", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("B001"));
+    }
+
     private ProductMetadata buildProduct(String id, String title, double price) {
         ProductMetadata p = new ProductMetadata();
         p.setId(id);

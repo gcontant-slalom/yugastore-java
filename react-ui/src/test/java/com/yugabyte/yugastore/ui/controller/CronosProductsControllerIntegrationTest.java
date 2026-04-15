@@ -52,4 +52,34 @@ class CronosProductsControllerIntegrationTest {
 
         server.verify();
     }
+
+        @Test
+        void getTenantProductDetails_whenGatewayReturns404_returnsEmptyJsonObject() throws Exception {
+        server.expect(requestTo("http://localhost:8081/api/v1/tenant/northwind-books/product/MISSING"))
+            .andExpect(method(HttpMethod.GET))
+            .andRespond(withStatus(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"error\":\"not found\"}"));
+
+        mockMvc.perform(get("/tenant/northwind-books/products/details").param("asin", "MISSING"))
+            .andExpect(status().isOk())
+            .andExpect(content().json("{}"));
+
+        server.verify();
+        }
+
+        @Test
+        void getMerchantContextForTenantKey_proxiesPublicLookup() throws Exception {
+        server.expect(requestTo("http://localhost:8081/api/v1/merchant-context/tenant/northwind-books"))
+            .andExpect(method(HttpMethod.GET))
+            .andRespond(withStatus(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\"}"));
+
+        mockMvc.perform(get("/api/v1/merchant-context/tenant/northwind-books"))
+            .andExpect(status().isOk())
+            .andExpect(content().json("{\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\"}"));
+
+        server.verify();
+        }
 }

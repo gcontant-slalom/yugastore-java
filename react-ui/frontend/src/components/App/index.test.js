@@ -13,11 +13,12 @@ jest.mock('../Cart', () => props => (
   </div>
 ));
 jest.mock('../ShowProduct', () => props => (
-  <button className="showproduct-add" onClick={() => props.addItemToCart({ id: 'sku-3', title: 'Detail Item' })}>show-product-page</button>
+  <button className="showproduct-add" onClick={() => props.addItemToCart({ id: 'sku-3', title: 'Detail Item' })}>show-product-page-{props.tenantKey || 'demo'}</button>
 ));
 jest.mock('../Products', () => props => (
   <div>
     <div>products-page-{props.category || props.sort || (props.match && props.match.params.category) || 'none'}</div>
+    <div>products-tenant-{props.tenantKey || 'demo'}</div>
     <button className="products-add" onClick={() => props.addItemToCart({ id: 'sku-2', title: 'List Item' })}>add-product</button>
   </div>
 ));
@@ -363,6 +364,38 @@ describe('App', () => {
 
     expect(container.textContent).toContain('Unknown tenant storefront');
     expect(container.textContent).not.toContain('home-page-demo');
+  });
+
+  it('renders tenant-scoped category and item routes with the resolved tenant context', async () => {
+    const cases = [
+      ['/northwind-books/Books', 'products-tenant-northwind-books'],
+      ['/northwind-books/item/sku-3', 'show-product-page-northwind-books']
+    ];
+
+    for (const [route, expectedText] of cases) {
+      global.fetch = jest.fn()
+        .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }))
+        .mockImplementationOnce(() => Promise.resolve({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve(JSON.stringify({ tenantId: '8', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+        }));
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      await act(async () => {
+        ReactDOM.render(
+          <MemoryRouter initialEntries={[route]}>
+            <WrappedApp />
+          </MemoryRouter>,
+          container
+        );
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(container.textContent).toContain(expectedText);
+    }
   });
 
   it('sets and clears the cart error flag when add to cart fails', async () => {

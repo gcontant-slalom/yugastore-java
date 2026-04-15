@@ -12,9 +12,9 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 ## 2. Tenant Context Contract
 
-- [ ] 2.1 Define the merchant company, store, and request-context contract for the first slice and map current demo data to a default merchant context.
+- [x] 2.1 Define the merchant company, store, and request-context contract for the first slice and map current demo data to a default merchant context.
 - [ ] 2.2 Add canonical path-based tenant routing for `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup` in `react-ui` and `api-gateway-microservice`.
-- [ ] 2.3 Identify the targeted request path and replace remaining hard-coded demo-user assumptions with auth-derived tenant context.
+- [x] 2.3 Identify the targeted request path and replace remaining hard-coded demo-user assumptions with auth-derived tenant context.
 - [x] 2.4 Add explicit invalid-slug and unknown-tenant handling so tenant routes do not silently fall back to the shared root storefront.
 
 ## 3. Persistence Foundation

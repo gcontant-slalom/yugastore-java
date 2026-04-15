@@ -9,20 +9,32 @@ import { Button } from '../../components/common';
 import './index.css';
 
 class Products extends Component {
-  state = {current_query: "", category: undefined, products: [], isUpdating: true}
+  state = {current_query: "", category: undefined, tenantKey: null, products: [], isUpdating: true}
+
+  getTenantKey = (props = this.props) => {
+    return props.tenantKey || (props.match && props.match.params ? props.match.params.tenantSlug : null) || null;
+  }
 
   componentDidMount() {
     const category = this.props.category || this.props.match.params.category;
-    this.setState({ category: this.linkEncode(category) || null }, this.fetchProducts(this.linkEncode(category)));
+    const tenantKey = this.getTenantKey();
+    this.setState({ category: this.linkEncode(category) || null, tenantKey }, () => this.fetchProducts(this.linkEncode(category), undefined, undefined, tenantKey));
   }
 
   componentWillReceiveProps(nextProps) {
     const category = nextProps.category || nextProps.match.params.category;
-    if (this.state.category !== this.linkEncode(category) && this.state.category !== undefined) this.setState({ category: this.linkEncode(category), products: [] }, this.fetchProducts(this.linkEncode(category)));
+    const nextTenantKey = this.getTenantKey(nextProps);
+    const nextCategory = this.linkEncode(category);
+
+    if ((this.state.category !== nextCategory || this.state.tenantKey !== nextTenantKey) && this.state.category !== undefined) {
+      this.setState({ category: nextCategory, tenantKey: nextTenantKey, products: [] }, () => this.fetchProducts(nextCategory, undefined, undefined, nextTenantKey));
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return !_.isEqual(this.state.products, nextState.products);
+    return !_.isEqual(this.state.products, nextState.products)
+      || this.state.category !== nextState.category
+      || this.state.tenantKey !== nextState.tenantKey;
   }
 
   linkEncode = (name) => {
@@ -33,15 +45,16 @@ class Products extends Component {
     return name.replace('%20',' ').replace('%26', '&').replace('%2C', ',');
   }
 
-  fetchProducts(nextCategory, nextLimit, nextOffset) {
+  fetchProducts(nextCategory, nextLimit, nextOffset, nextTenantKey = this.state.tenantKey) {
     let url, query = '';
     const limit = this.props.limit || 12 || nextLimit;
     const offset = this.props.offset || nextOffset || 0;
+    const tenantPrefix = nextTenantKey ? '/tenant/' + nextTenantKey : '';
     if (nextCategory) {
-      url = '/products/category/' + nextCategory + '?';
+      url = tenantPrefix + '/products/category/' + nextCategory + '?';
     }
     else {
-      url = '/products?';
+      url = tenantPrefix + '/products?';
     }
     query += "limit=" + limit + '&';
     query += "offset=" + offset;
@@ -72,6 +85,7 @@ class Products extends Component {
     let stars = ["star_border", "star_border", "star_border", "star_border", "star_border"];
     const self = this;
     const category = this.props.category || this.props.match.params.category;
+    const itemLinkPrefix = this.state.tenantKey ? '/' + this.state.tenantKey : '';
     return (
       <div className={ "container " + (this.props.isInline ? '' : "content")}>
         <div className="products">
@@ -104,7 +118,7 @@ class Products extends Component {
                 return (
                   <Col lg={3} md={6} xs={12} key={product.id.asin || product.id}>
                     <div className="item" >
-                      <Link to={`/item/${product.id.asin || product.id}`}>
+                      <Link to={`${itemLinkPrefix}/item/${product.id.asin || product.id}`}>
                         <div className="product-img" style={{backgroundImage: `url(${product.imUrl})`}}></div>
                         <div className="product-details">
                           <div className="reviews-add">

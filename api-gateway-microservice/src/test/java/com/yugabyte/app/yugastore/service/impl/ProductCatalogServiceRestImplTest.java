@@ -77,6 +77,28 @@ class ProductCatalogServiceRestImplTest {
         verify(productCatalogRestClient).getProducts(10, 20);
     }
 
+    @Test
+    void getTenantProductDetails_passesTenantContextHeaders() {
+        ProductMetadata expected = buildProduct("B001", "Gadget", 9.99);
+        when(productCatalogRestClient.getProductDetails("B001", "northwind-books", "Northwind Books"))
+                .thenReturn(expected);
+
+        ProductMetadata result = service.getProductDetails("B001", "northwind-books", "Northwind Books");
+
+        assertThat(result.getId()).isEqualTo("B001");
+        verify(productCatalogRestClient).getProductDetails("B001", "northwind-books", "Northwind Books");
+    }
+
+    @Test
+    void getTenantProductsByCategory_passesTenantContextHeaders() {
+        when(productCatalogRestClient.getProductsByCategory("Books", 5, 0, "northwind-books", "Northwind Books"))
+                .thenReturn(List.of());
+
+        service.getProductsByCategory("Books", 5, 0, "northwind-books", "Northwind Books");
+
+        verify(productCatalogRestClient).getProductsByCategory("Books", 5, 0, "northwind-books", "Northwind Books");
+    }
+
     private ProductMetadata buildProduct(String id, String title, double price) {
         ProductMetadata p = new ProductMetadata();
         p.setId(id);

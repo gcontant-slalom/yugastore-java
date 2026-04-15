@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.yugabyte.app.yugastore.domain.ProductMetadata;
 import com.yugabyte.app.yugastore.domain.ProductRanking;
 import com.yugabyte.app.yugastore.domain.ProductRankingKey;
+import com.yugabyte.app.yugastore.domain.MerchantSignupResponse;
+import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import com.yugabyte.app.yugastore.service.ProductCatalogServiceRest;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +28,9 @@ class ProductCatalogControllerTest {
 
     @Mock
     private ProductCatalogServiceRest productCatalogServiceRest;
+
+    @Mock
+    private AuthServiceRest authServiceRest;
 
     @InjectMocks
     private ProductCatalogController controller;
@@ -98,6 +103,36 @@ class ProductCatalogControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+            @Test
+            void getTenantProducts_returns200WithTenantResolvedList() throws Exception {
+            MerchantSignupResponse tenantContext = new MerchantSignupResponse();
+            tenantContext.setTenantKey("northwind-books");
+            tenantContext.setCompanyName("Northwind Books");
+            when(authServiceRest.merchantContextForTenantKey("northwind-books")).thenReturn(tenantContext);
+            when(productCatalogServiceRest.getProducts(2, 0, "northwind-books", "Northwind Books"))
+                .thenReturn(List.of(buildProduct("B001", "Title 1", 5.0)));
+
+            mockMvc.perform(get("/api/v1/tenant/northwind-books/products")
+                    .param("limit", "2")
+                    .param("offset", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("B001"));
+            }
+
+            @Test
+            void getTenantProductDetails_returns200WithTenantResolvedProduct() throws Exception {
+            MerchantSignupResponse tenantContext = new MerchantSignupResponse();
+            tenantContext.setTenantKey("northwind-books");
+            tenantContext.setCompanyName("Northwind Books");
+            when(authServiceRest.merchantContextForTenantKey("northwind-books")).thenReturn(tenantContext);
+            when(productCatalogServiceRest.getProductDetails("B001", "northwind-books", "Northwind Books"))
+                .thenReturn(buildProduct("B001", "Gadget X", 29.99));
+
+            mockMvc.perform(get("/api/v1/tenant/northwind-books/product/B001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("B001"));
+            }
 
     private ProductMetadata buildProduct(String id, String title, double price) {
         ProductMetadata p = new ProductMetadata();

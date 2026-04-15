@@ -8,45 +8,51 @@ import { Link } from 'react-router-dom';
 import './index.css';
 
 class ShowProduct extends Component {
-  state = {product_id: "", product: undefined, productAlsoBought: []}
+  state = {product_id: "", tenantKey: null, product: undefined, productAlsoBought: []}
 
   getProductIdFromRoute = (props = this.props) => {
     return props.match.params.asin || props.match.params.id;
   }
 
+  getTenantKeyFromRoute = (props = this.props) => {
+    return props.tenantKey || (props.match && props.match.params ? props.match.params.tenantSlug : null) || null;
+  }
+
   componentDidMount() {
     var new_product_id = this.getProductIdFromRoute();
-    this.fetchProductDetails(new_product_id)
+    this.fetchProductDetails(new_product_id, this.getTenantKeyFromRoute())
   }
 
   componentDidUpdate(prevProps) {
     const previousProductId = this.getProductIdFromRoute(prevProps);
     const nextProductId = this.getProductIdFromRoute();
+    const previousTenantKey = this.getTenantKeyFromRoute(prevProps);
+    const nextTenantKey = this.getTenantKeyFromRoute();
 
-    if (previousProductId !== nextProductId) {
-      this.fetchProductDetails(nextProductId);
+    if (previousProductId !== nextProductId || previousTenantKey !== nextTenantKey) {
+      this.fetchProductDetails(nextProductId, nextTenantKey);
     }
   }
 
-  fetchProductDetails = (new_product_id) => {
+  fetchProductDetails = (new_product_id, tenantKey = this.getTenantKeyFromRoute()) => {
     if (new_product_id !== undefined &&
         this.state.product_id !== undefined &&
-        new_product_id !== this.state.product_id) {
-      this.setState({ product_id: '' + new_product_id, product: undefined, productAlsoBought: [] });
-      var url = '/products/details?asin=' + new_product_id;
+        (new_product_id !== this.state.product_id || tenantKey !== this.state.tenantKey)) {
+      this.setState({ product_id: '' + new_product_id, tenantKey, product: undefined, productAlsoBought: [] });
+      var url = (tenantKey ? '/tenant/' + tenantKey : '') + '/products/details?asin=' + new_product_id;
       console.log("Fetching url: " + url);
       fetch(url)
         .then(res => res.json())
         .then(product => {
           this.setState({ product });
-          if (product.also_bought) this.fetchProductAlsoBought(product.also_bought.slice(0,4));
+          if (product.also_bought) this.fetchProductAlsoBought(product.also_bought.slice(0,4), tenantKey);
         });
     }
   }
 
-  fetchProductAlsoBought = (productList) => {
+  fetchProductAlsoBought = (productList, tenantKey = this.getTenantKeyFromRoute()) => {
     productList.forEach(element => {
-      let url = '/products/details?asin=' + element;
+      let url = (tenantKey ? '/tenant/' + tenantKey : '') + '/products/details?asin=' + element;
       fetch(url,{
           headers: {
             'Accept': 'application/json',
@@ -80,6 +86,7 @@ class ShowProduct extends Component {
       stars[4] = (currentProduct.avg_stars < 5) ? "star_half" : "star";
     }
     console.log(currentProduct);
+    const itemLinkPrefix = this.state.tenantKey ? '/' + this.state.tenantKey : '';
     return (
       <div className="show-product">
         <div className="content">
@@ -153,7 +160,7 @@ class ShowProduct extends Component {
                   return (
                     <Col lg={3} md={6} xs={12} key={product.id}>
                       <div className="item" >
-                        <Link to={`/item/${product.id}`}>
+                        <Link to={`${itemLinkPrefix}/item/${product.id}`}>
                           <div className="product-img" style={{backgroundImage: `url(${product.imUrl})`}}></div>
                           <div className="product-details">
                             <div className="reviews-add">

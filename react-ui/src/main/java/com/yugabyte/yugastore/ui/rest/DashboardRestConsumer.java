@@ -16,7 +16,6 @@ import org.springframework.web.client.HttpStatusCodeException;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import java.util.*;
 
@@ -70,6 +69,31 @@ public class DashboardRestConsumer {
 		return productListJsonArray.toString();
 	}
 
+	public String getTenantProducts(String tenantKey, int limit, int offset) {
+		String restURL = restUrlBase + "tenant/" + tenantKey + "/products?limit=" + limit + "&offset=" + offset;
+		ResponseEntity<String> rateResponse =
+		        restTemplate.exchange(restURL,
+		                    HttpMethod.GET, null, String.class);
+		String productListJsonResponse = rateResponse.getBody();
+
+		JsonElement productListJsonArray =
+			new Gson().fromJson(productListJsonResponse, JsonArray.class);
+		return productListJsonArray.toString();
+	}
+
+	public String getTenantProductsByCategory(String tenantKey, String name, int limit, int offset) {
+		String encodedName = name.replace(" ","%20").replace("&","%26").replace(",","%2C");
+		String restURL = restUrlBase + "tenant/" + tenantKey + "/products/category/" + encodedName + "?limit=" + limit + "&offset=" + offset;
+		ResponseEntity<String> rateResponse =
+		        restTemplate.exchange(restURL,
+		                    HttpMethod.GET, null, String.class);
+		String productListJsonResponse = rateResponse.getBody();
+
+		JsonElement productListJsonArray =
+			new Gson().fromJson(productListJsonResponse, JsonArray.class);
+		return productListJsonArray.toString();
+	}
+
 	/**
 	 * Loads the details page of any product.
 	 */
@@ -82,6 +106,15 @@ public class DashboardRestConsumer {
 		}
 		return "{}";
 	}	
+
+	public String getTenantProductDetails(String tenantKey, String asin) {
+		String restURL = restUrlBase + "tenant/" + tenantKey + "/product/" + asin;
+		ResponseEntity<String> response = exchange(restURL, HttpMethod.GET, null);
+		if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+			return response.getBody();
+		}
+		return "{}";
+	}
 
 	public String addProductToCart(String asin) {
 		return addProductToCart(asin, null).getBody();
@@ -175,6 +208,12 @@ public class DashboardRestConsumer {
 	public ResponseEntity<String> getMerchantContexts(String userId) {
 		String restURL = restUrlBase + "merchant-context/list";
 		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.GET, request);
+	}
+
+	public ResponseEntity<String> getMerchantContextForTenantKey(String tenantKey) {
+		String restURL = restUrlBase + "merchant-context/tenant/" + tenantKey;
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(null, MediaType.APPLICATION_JSON));
 		return exchange(restURL, HttpMethod.GET, request);
 	}
 

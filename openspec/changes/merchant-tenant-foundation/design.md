@@ -94,6 +94,28 @@ Recommended decision: preserve current demo usability by mapping existing sample
 - Alternative considered: require all existing sample data to be recreated manually.
 - Rejected because it creates unnecessary friction for verification and local startup.
 
+### 7. Define one explicit first-slice merchant-context contract
+
+Recommended decision: keep the first-slice merchant context intentionally small and align it with the fields already flowing through the login service, gateway, and tenant storefront routes.
+
+- Merchant company or store context is the shared tenant object persisted in `login-microservice` as `MerchantTenant`.
+- The first-slice merchant-context response shape is:
+	- `tenantId`: stable tenant identifier for the created or resolved merchant tenant
+	- `tenantKey`: browser-visible slug used in tenant storefront and signup routes
+	- `companyName`: merchant-facing display name for the tenant context
+	- `merchantAdminUserId`: authenticated user currently acting as the merchant-admin anchor for the response
+- User-to-tenant association remains separate from shopper identity through `MerchantMembership`, which links one or more authenticated users to the same merchant tenant.
+- Request context for the bounded storefront flow is derived in this order:
+	- `/` means the shared demo storefront and does not trigger tenant-slug lookup
+	- `/{tenantSlug}/...` means resolve tenant context by slug at the gateway boundary
+	- authenticated shopper or merchant identity remains a separate concern from the resolved merchant tenant
+- For the first bounded downstream flow, the gateway forwards merchant tenant context as `X-Tenant-Key` and `X-Merchant-Company-Name`; authenticated user identity continues to use `X-Authenticated-UserId` where that contract already exists.
+- The shared root storefront is the default merchant-context mapping for the current demo dataset. Concretely, the existing `cronos.products`, `cronos.product_rankings`, and `cronos.product_inventory` sample data are treated as one implicit demo merchant context served only at `/` until later persistence work adds explicit ownership fields.
+
+- Why: this matches the current implementation surface and gives later ownership work a stable contract to build on.
+- Alternative considered: define a broader merchant/store/request object now with separate store ids, theme ids, and catalog ids.
+- Rejected for now because those fields are not yet implemented and would create speculative contract surface.
+
 ## Risks / Trade-offs
 
 - [Auth contract changes late] -> Keep tenant-context inputs dependent on the finalized auth-first user identity contract.
@@ -105,10 +127,11 @@ Recommended decision: preserve current demo usability by mapping existing sample
 ## Migration Plan
 
 - Add a merchant onboarding route and company or store creation contract for the first slice.
+- Keep the first-slice merchant-context response limited to `tenantId`, `tenantKey`, `companyName`, and `merchantAdminUserId`, with user-to-tenant links represented separately through membership.
 - Fix the canonical route contract to `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup`.
 - Ensure the onboarding page loads with a clean form state unless the user has just completed a successful tenant-creation submit in the current flow.
 - Add tenant ownership fields to targeted merchant-owned data structures and seed assets.
-- Map current demo data to a default merchant or store context so existing sample behavior remains testable.
+- Treat the existing `cronos` sample catalog and storefront behavior at `/` as the implicit default merchant context so existing sample behavior remains testable while explicit ownership rollout is still pending.
 - Update frontend and gateway routing so a supported path resolves tenant context for local demos.
 - Update the gateway and downstream contract to pass tenant context on the targeted request path after auth identity is available.
 - Add focused verification for missing-context rejection and ownership persistence.

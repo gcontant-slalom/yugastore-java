@@ -182,4 +182,33 @@ describe('ShowProduct', () => {
     expect(container.textContent).toContain('Primary Product');
     expect(global.fetch).toHaveBeenCalledWith('/products/details?asin=sku-1');
   });
+
+  it('uses tenant-scoped detail requests and links on tenant storefront routes', async () => {
+    global.fetch = jest.fn(url => {
+      if (url === '/tenant/northwind-books/products/details?asin=sku-1') {
+        return Promise.resolve({ json: () => Promise.resolve(mainProduct) });
+      }
+      if (url === '/tenant/northwind-books/products/details?asin=sku-2') {
+        return Promise.resolve({ json: () => Promise.resolve(relatedOne) });
+      }
+      if (url === '/tenant/northwind-books/products/details?asin=sku-3') {
+        return Promise.resolve({ json: () => Promise.resolve(relatedTwo) });
+      }
+      return Promise.reject(new Error('Unexpected fetch: ' + url));
+    });
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/northwind-books/item/sku-1']}>
+          <Route path="/:tenantSlug/item/:asin" render={props => <ShowProduct {...props} addItemToCart={jest.fn()} />} />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith('/tenant/northwind-books/products/details?asin=sku-1');
+    expect(container.querySelectorAll('a')[0].getAttribute('href')).toBe('/northwind-books/item/sku-2');
+  });
 });

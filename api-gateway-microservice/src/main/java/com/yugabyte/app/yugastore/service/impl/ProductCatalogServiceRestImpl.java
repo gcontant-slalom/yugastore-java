@@ -36,12 +36,32 @@ public class ProductCatalogServiceRestImpl implements ProductCatalogServiceRest 
   }
 
   @Override
+  public ProductMetadata getProductDetails(String asin, String tenantKey, String companyName) {
+    try {
+      return productCatalogRestClient.getProductDetails(asin, tenantKey, companyName);
+    } catch (FeignException.NotFound ex) {
+      return null;
+    }
+  }
+
+  @Override
   public List<ProductMetadata> getProducts(int limit, int offset) {
     return productCatalogRestClient.getProducts(limit, offset);
   }
 
   @Override
+  public List<ProductMetadata> getProducts(int limit, int offset, String tenantKey, String companyName) {
+    return productCatalogRestClient.getProducts(limit, offset, tenantKey, companyName);
+  }
+
+  @Override
   public List<ProductRanking> getProductsByCategory(String category, int limit, int offset) {
     return productCatalogRestClient.getProductsByCategory(category, limit, offset);
+  }
+
+  @Override
+  public List<ProductRanking> getProductsByCategory(String category, int limit, int offset, String tenantKey,
+      String companyName) {
+    return productCatalogRestClient.getProductsByCategory(category, limit, offset, tenantKey, companyName);
   }
 }

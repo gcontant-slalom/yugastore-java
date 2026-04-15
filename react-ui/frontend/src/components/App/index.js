@@ -100,7 +100,7 @@ export class App extends Component {
 
   getTenantSlugFromLocation = (location = this.props.location) => {
     const pathname = location && location.pathname ? location.pathname : '';
-    const match = pathname.match(/^\/([a-z0-9-]+)\/?$/);
+    const match = pathname.match(/^\/([a-z0-9-]+)(?:\/|$)/);
     if (!match) {
       return null;
     }
@@ -404,6 +404,12 @@ export class App extends Component {
   }
 
   renderTenantStorefront = () => {
+    return this.renderResolvedTenantRoute(tenantContext => (
+      <Home addItemToCart={this.addItemToCart} tenantContext={tenantContext} />
+    ));
+  }
+
+  renderResolvedTenantRoute = renderContent => {
     const tenantSlug = this.getTenantSlugFromLocation();
 
     if (this.state.tenantLookupPending) {
@@ -424,7 +430,7 @@ export class App extends Component {
       return null;
     }
 
-    return <Home addItemToCart={this.addItemToCart} tenantContext={this.state.activeTenantContext} />;
+    return renderContent(this.state.activeTenantContext);
   }
 
   render() {
@@ -477,6 +483,21 @@ export class App extends Component {
               removeItemFromCart={this.removeItemFromCart}
               fetchCart={this.fetchCart} />
           )} />
+          <Route exact sensitive path="/:tenantSlug([a-z0-9-]+)/item/:asin"
+            render={(props) => this.renderResolvedTenantRoute(tenantContext => (
+              <ShowProduct
+                {...props}
+                tenantKey={tenantContext.tenantKey}
+                addItemToCart={this.addItemToCart} />
+            ))} />
+          <Route exact sensitive path="/:tenantSlug([a-z0-9-]+)/:category(Books|Music|Beauty|Electronics)"
+            render={(props) => this.renderResolvedTenantRoute(tenantContext => (
+              <Products
+                {...props}
+                tenantKey={tenantContext.tenantKey}
+                category={props.match.params.category}
+                addItemToCart={this.addItemToCart} />
+            ))} />
           <Route path="/item/:asin" render={(props) => <ShowProduct {...props} addItemToCart={this.addItemToCart} />} />
           <Route path="/sort/:sort" render={(props) => <Products {...props} sort={props.match.params.sort} addItemToCart={this.addItemToCart} />} />
           <Route exact sensitive path="/:tenantSlug([a-z0-9-]+)" render={this.renderTenantStorefront} />

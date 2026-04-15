@@ -70,6 +70,20 @@ class DashboardRestConsumerTest {
 
 		assertThat(response).isEqualTo("{}");
 	}
+
+	@Test
+	void getTenantProductDetails_targetsTenantScopedGatewayRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/tenant/northwind-books/product/B001"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"id\":\"B001\"}"));
+
+		String response = dashboardRestConsumer.getTenantProductDetails("northwind-books", "B001");
+
+		assertThat(response).contains("B001");
+		server.verify();
+	}
 	
 	void createMerchantSignup_targetsGatewayMerchantSignupRoute() {
 		server.expect(requestTo("http://localhost:8081/api/v1/merchant-signup"))
@@ -115,6 +129,22 @@ class DashboardRestConsumerTest {
 						.body("[{\"tenantId\":\"8\",\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\",\"merchantAdminUserId\":\"42\"}]"));
 
 		ResponseEntity<String> response = dashboardRestConsumer.getMerchantContexts("42");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("northwind-books");
+
+		server.verify();
+	}
+
+	@Test
+	void getMerchantContextForTenantKey_targetsPublicTenantLookupRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/merchant-context/tenant/northwind-books"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\"}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.getMerchantContextForTenantKey("northwind-books");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody()).contains("northwind-books");
