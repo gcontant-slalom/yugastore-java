@@ -8,6 +8,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.yugabyte.app.yugastore.domain.CartTenantContext;
 import com.yugabyte.app.yugastore.rest.clients.ShoppingCartRestClient;
 import com.yugabyte.app.yugastore.service.ShoppingCartServiceRest;
 
@@ -23,9 +24,9 @@ public class ShoppingCartServiceRestImpl implements ShoppingCartServiceRest {
 	}
 
 	@Override
-	public String addProduct(String userId, String asin) {
+	public String addProduct(String userId, String asin, String tenantKey) {
 
-		String result = shoppingCartRestClient.addProductToCart(userId, asin);
+		String result = shoppingCartRestClient.addProductToCart(userId, asin, tenantKey);
 		return result;
 	}
 
@@ -34,6 +35,11 @@ public class ShoppingCartServiceRestImpl implements ShoppingCartServiceRest {
 
 		Map<String, Integer> productsInCart = shoppingCartRestClient.getProductsInCart(userId);
 		return productsInCart;
+	}
+
+	@Override
+	public CartTenantContext getCartTenantContext(String userId) {
+		return shoppingCartRestClient.getCartTenantContext(userId);
 	}
 
 	@Override

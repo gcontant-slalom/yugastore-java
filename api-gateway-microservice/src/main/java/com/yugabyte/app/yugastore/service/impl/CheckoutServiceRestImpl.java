@@ -20,9 +20,9 @@ public class CheckoutServiceRestImpl implements CheckoutServiceRest {
 	}
 
 	@Override
-	public CheckoutStatus checkout(String userId) {
+	public CheckoutStatus checkout(String userId, String tenantKey, String companyName) {
 
-		return checkoutRestClient.checkout(userId);
+		return checkoutRestClient.checkout(userId, tenantKey, companyName);
 	}
 
 }

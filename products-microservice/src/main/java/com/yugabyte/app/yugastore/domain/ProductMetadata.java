@@ -7,7 +7,6 @@ import org.springframework.data.cassandra.core.mapping.CassandraType.Name;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
-import org.springframework.hateoas.RepresentationModel;
 
 
 
@@ -19,6 +18,9 @@ public class ProductMetadata{
     @PrimaryKey(value="asin")
     private String id;
   //String asin;
+
+	@Column(value = "tenant_key")
+	private String tenantKey;
 
 	String brand;
 
@@ -59,6 +61,12 @@ public class ProductMetadata{
 	}
 	public String getBrand() {
 		return brand;
+	}
+	public String getTenantKey() {
+		return tenantKey;
+	}
+	public void setTenantKey(String tenantKey) {
+		this.tenantKey = tenantKey;
 	}
 	public void setBrand(String brand) {
 		this.brand = brand;

@@ -1,6 +1,5 @@
 package com.yugabyte.app.yugastore.cronoscheckoutapi.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,7 +38,7 @@ class CheckoutControllerTest {
     @Test
     void checkout_whenOrderSucceeds_returnsSuccessStatus() throws Exception {
         Order order = buildOrder("order-123", "Customer bought: Gadget X", 49.99);
-        when(checkoutService.checkout("42")).thenReturn(order);
+        when(checkoutService.checkout("42", null, null)).thenReturn(order);
 
         mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
                 .andExpect(status().isOk())
@@ -50,7 +49,7 @@ class CheckoutControllerTest {
 
     @Test
     void checkout_whenCartIsEmpty_returnsFailureStatus() throws Exception {
-        when(checkoutService.checkout("42")).thenReturn(null);
+        when(checkoutService.checkout("42", null, null)).thenReturn(null);
 
         mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
                 .andExpect(status().isOk())
@@ -61,7 +60,7 @@ class CheckoutControllerTest {
 
     @Test
     void checkout_whenNotEnoughStock_returnsFailureStatus() throws Exception {
-        when(checkoutService.checkout("42"))
+        when(checkoutService.checkout("42", null, null))
                 .thenThrow(new NotEnoughProductsInStockException("Gadget X", 1));
 
         mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout").param("userid", "42"))
@@ -69,6 +68,21 @@ class CheckoutControllerTest {
                 .andExpect(jsonPath("$.status").value(CheckoutStatus.FAILURE))
                 .andExpect(jsonPath("$.orderNumber").value(""));
     }
+
+        @Test
+        void checkout_whenTenantHeadersPresent_forwardsTenantContext() throws Exception {
+        Order order = buildOrder("order-tenant", "Customer bought: Gadget X", 49.99);
+        order.setTenant_key("northwind-books");
+        when(checkoutService.checkout("42", "northwind-books", "Northwind Books")).thenReturn(order);
+
+        mockMvc.perform(post("/checkout-microservice/shoppingCart/checkout")
+                .param("userid", "42")
+                .header("X-Tenant-Key", "northwind-books")
+                .header("X-Merchant-Company-Name", "Northwind Books"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(CheckoutStatus.SUCCESS))
+            .andExpect(jsonPath("$.orderNumber").value("order-tenant"));
+        }
 
     private Order buildOrder(String id, String details, double total) {
         Order order = new Order();

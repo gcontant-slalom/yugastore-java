@@ -36,7 +36,7 @@ public class ProductCatalogController {
   public ResponseEntity<ProductMetadata> getProductDetails(@PathVariable String asin,
       @RequestHeader(value = TENANT_KEY_HEADER, required = false) String tenantKey,
       @RequestHeader(value = MERCHANT_COMPANY_NAME_HEADER, required = false) String companyName) {
-    return productService.findById(asin)
+    return findProductDetails(asin, tenantKey)
         .map(productMetadata -> new ResponseEntity<>(productMetadata, HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
@@ -46,7 +46,9 @@ public class ProductCatalogController {
     @Param("offset") int offset,
     @RequestHeader(value = TENANT_KEY_HEADER, required = false) String tenantKey,
     @RequestHeader(value = MERCHANT_COMPANY_NAME_HEADER, required = false) String companyName) {
-    return productService.findAllProductsPageable(limit, offset);
+    return tenantKey == null || tenantKey.isBlank()
+        ? productService.findAllProductsPageable(limit, offset)
+        : productService.findAllProductsPageable(limit, offset, tenantKey);
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/products/category/{category}", produces = "application/json")
@@ -55,6 +57,15 @@ public class ProductCatalogController {
                                                     @Param("offset") int offset,
                                                     @RequestHeader(value = TENANT_KEY_HEADER, required = false) String tenantKey,
                                                     @RequestHeader(value = MERCHANT_COMPANY_NAME_HEADER, required = false) String companyName) {
-    return productRankingService.getProductsByCategory(category, limit, offset);
+    return tenantKey == null || tenantKey.isBlank()
+        ? productRankingService.getProductsByCategory(category, limit, offset)
+        : productRankingService.getProductsByCategory(category, limit, offset, tenantKey);
+  }
+
+  private java.util.Optional<ProductMetadata> findProductDetails(String asin, String tenantKey) {
+    if (tenantKey == null || tenantKey.isBlank()) {
+      return productService.findById(asin);
+    }
+    return productService.findById(asin, tenantKey);
   }
 }

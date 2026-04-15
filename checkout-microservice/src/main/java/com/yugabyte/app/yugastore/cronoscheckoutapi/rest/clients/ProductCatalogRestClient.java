@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.yugabyte.app.yugastore.cronoscheckoutapi.domain.ProductMetadata;
@@ -16,6 +17,12 @@ public interface ProductCatalogRestClient {
 
   @RequestMapping("/products-microservice/product/{asin}")
   ProductMetadata getProductDetails(@PathVariable("asin") String asin);
+
+  @RequestMapping("/products-microservice/product/{asin}")
+  ProductMetadata getProductDetails(
+      @PathVariable("asin") String asin,
+      @RequestHeader(value = "X-Tenant-Key", required = false) String tenantKey,
+      @RequestHeader(value = "X-Merchant-Company-Name", required = false) String companyName);
 
   @RequestMapping("/products-microservice/products")
   List<ProductMetadata> getProducts(@RequestParam("limit") int limit,

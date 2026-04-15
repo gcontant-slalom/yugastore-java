@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.yugabyte.app.yugastore.domain.CartTenantContext;
 import com.yugabyte.app.yugastore.domain.AuthUser;
 import com.yugabyte.app.yugastore.domain.CheckoutStatus;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
@@ -75,11 +76,12 @@ class ShoppingCartControllerTest {
         when(shoppingCartServiceRest.getProductsInCart("42")).thenReturn(Map.of("B001", 1));
 
         mockMvc.perform(post("/api/v1/shoppingCart/addProduct")
-                        .param("asin", "B001"))
+                        .param("asin", "B001")
+                        .header(ShoppingCartController.TENANT_KEY_HEADER, "northwind-books"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.B001").value(1));
 
-        verify(shoppingCartServiceRest).addProduct("42", "B001");
+        verify(shoppingCartServiceRest).addProduct("42", "B001", "northwind-books");
     }
 
     @Test
@@ -116,12 +118,52 @@ class ShoppingCartControllerTest {
         CheckoutStatus checkoutStatus = new CheckoutStatus();
         checkoutStatus.setStatus(CheckoutStatus.SUCCESS);
         checkoutStatus.setOrderNumber("order-abc");
-        when(checkoutServiceRest.checkout("42")).thenReturn(checkoutStatus);
+        when(shoppingCartServiceRest.getCartTenantContext("42")).thenReturn(new CartTenantContext());
+        when(checkoutServiceRest.checkout("42", null, null)).thenReturn(checkoutStatus);
 
         mockMvc.perform(post("/api/v1/shoppingCart/checkout"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(CheckoutStatus.SUCCESS))
                 .andExpect(jsonPath("$.orderNumber").value("order-abc"));
+    }
+
+        @Test
+        void checkout_forwardsTenantContextHeaders() throws Exception {
+        CheckoutStatus checkoutStatus = new CheckoutStatus();
+        checkoutStatus.setStatus(CheckoutStatus.SUCCESS);
+        checkoutStatus.setOrderNumber("order-tenant");
+            CartTenantContext cartTenantContext = new CartTenantContext();
+            cartTenantContext.setTenantKey("northwind-books");
+            when(shoppingCartServiceRest.getCartTenantContext("42")).thenReturn(cartTenantContext);
+        when(checkoutServiceRest.checkout("42", "northwind-books", "Northwind Books"))
+            .thenReturn(checkoutStatus);
+
+        mockMvc.perform(post("/api/v1/shoppingCart/checkout")
+                .header(ShoppingCartController.TENANT_KEY_HEADER, "northwind-books")
+                .header(ShoppingCartController.MERCHANT_COMPANY_NAME_HEADER, "Northwind Books"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.orderNumber").value("order-tenant"));
+        }
+
+    @Test
+    void checkout_whenTenantOwnedCartHasNoTenantHeader_returns400() throws Exception {
+        CartTenantContext cartTenantContext = new CartTenantContext();
+        cartTenantContext.setTenantKey("northwind-books");
+        when(shoppingCartServiceRest.getCartTenantContext("42")).thenReturn(cartTenantContext);
+
+        mockMvc.perform(post("/api/v1/shoppingCart/checkout"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getCartTenantContext_returnsContextPayload() throws Exception {
+        CartTenantContext cartTenantContext = new CartTenantContext();
+        cartTenantContext.setTenantKey("northwind-books");
+        when(shoppingCartServiceRest.getCartTenantContext("42")).thenReturn(cartTenantContext);
+
+        mockMvc.perform(post("/api/v1/shoppingCart/tenant-context"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tenantKey").value("northwind-books"));
     }
 
         @Test

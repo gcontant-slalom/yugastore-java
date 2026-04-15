@@ -18,4 +18,9 @@ public interface ProductRankingRepository extends CassandraRepository<ProductRan
 	@RestResource(path = "category", rel = "category")
 	public List<ProductRanking> getProductsByCategory(@Param("name") String category, @Param("limit") int limit, @Param("offset") int offset);
 
+	@Query("SELECT * FROM cronos.product_rankings WHERE category=?0 AND tenant_key=?1 LIMIT ?2 OFFSET ?3 ALLOW FILTERING")
+	@RestResource(exported = false)
+	public List<ProductRanking> getProductsByCategoryAndTenantKey(@Param("name") String category,
+			@Param("tenantKey") String tenantKey, @Param("limit") int limit, @Param("offset") int offset);
+
 }

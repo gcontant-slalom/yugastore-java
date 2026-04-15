@@ -18,5 +18,10 @@ public interface ProductMetadataRepo extends CassandraRepository<ProductMetadata
 	@RestResource(path = "products", rel = "products")
 	public List<ProductMetadata> getProducts(@Param("limit") int limit, @Param("offset") int offset);
 
+	@Query("SELECT * FROM cronos.products WHERE tenant_key=?0 LIMIT ?1 OFFSET ?2 ALLOW FILTERING")
+	@RestResource(exported = false)
+	public List<ProductMetadata> getProductsByTenantKey(@Param("tenantKey") String tenantKey,
+			@Param("limit") int limit, @Param("offset") int offset);
+
 	Optional<ProductMetadata> findById(String id);
 }

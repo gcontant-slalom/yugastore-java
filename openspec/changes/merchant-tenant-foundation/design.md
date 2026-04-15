@@ -143,6 +143,7 @@ Recommended decision: keep the first-slice merchant context intentionally small 
 - Ensure the onboarding page loads with a clean form state unless the user has just completed a successful tenant-creation submit in the current flow.
 - Add tenant ownership fields to targeted merchant-owned data structures and seed assets.
 - Treat the existing `cronos` sample catalog and storefront behavior at `/` as the implicit default merchant context so existing sample behavior remains testable while explicit ownership rollout is still pending.
+- Keep the YSQL-backed tenant foundation in `login-microservice` bounded to the existing `merchant_tenant` and `merchant_membership` tables plus the first-slice merchant-context response contract; do not expand this change into a new auth or role-management workflow.
 - Update frontend and gateway routing so a supported path resolves tenant context for local demos.
 - Update the gateway and downstream contract to pass tenant context on the targeted request path after auth identity is available.
 - Add focused verification for missing-context rejection and ownership persistence.

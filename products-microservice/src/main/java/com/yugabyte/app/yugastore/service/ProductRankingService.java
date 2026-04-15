@@ -10,5 +10,7 @@ public interface ProductRankingService {
 	Optional<ProductRanking> findProductRankingById(String asin);
 	
 	List<ProductRanking> getProductsByCategory(String category, int limit, int offset);
+
+	List<ProductRanking> getProductsByCategory(String category, int limit, int offset, String tenantKey);
 	
 }

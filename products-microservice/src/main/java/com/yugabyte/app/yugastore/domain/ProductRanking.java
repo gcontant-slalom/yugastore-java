@@ -10,6 +10,9 @@ public class ProductRanking{
 	@PrimaryKey
 	private ProductRankingKey asin;
 
+	@Column(value = "tenant_key")
+	private String tenantKey;
+
 	@Column(value = "sales_rank")
 	private int salesRank;
 	
@@ -30,8 +33,16 @@ public class ProductRanking{
 		return salesRank;
 	}
 
+	public String getTenantKey() {
+		return tenantKey;
+	}
+
 	public void setSalesRank(int salesRank) {
 		this.salesRank = salesRank;
+	}
+
+	public void setTenantKey(String tenantKey) {
+		this.tenantKey = tenantKey;
 	}
 
 	public ProductRankingKey getId() {

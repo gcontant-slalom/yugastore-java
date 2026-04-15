@@ -22,6 +22,9 @@ public class ShoppingCart {
 	@Column(name = "asin")
 	private String asin;
 
+	@Column(name = "tenant_key")
+	private String tenantKey;
+
 	@Column(name = "time_added")
 	private String time_added;
 	
@@ -50,6 +53,14 @@ public class ShoppingCart {
 
 	public void setAsin(String asin) {
 		this.asin = asin;
+	}
+
+	public String getTenantKey() {
+		return tenantKey;
+	}
+
+	public void setTenantKey(String tenantKey) {
+		this.tenantKey = tenantKey;
 	}
 	
 	public String getTime_added() {

@@ -19,14 +19,14 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 ## 3. Persistence Foundation
 
-- [ ] 3.1 Update YCQL schema and sample-data assets under `resources/` for tenant ownership fields needed by `products-microservice` and `checkout-microservice`.
-- [ ] 3.2 Update any required YSQL-backed model or contract definitions without inventing a full auth flow in `login-microservice`.
+- [x] 3.1 Update YCQL schema and sample-data assets under `resources/` for tenant ownership fields needed by `products-microservice` and `checkout-microservice`.
+- [x] 3.2 Update any required YSQL-backed model or contract definitions without inventing a full auth flow in `login-microservice`.
 
 ## 4. Service Propagation
 
-- [ ] 4.1 Implement tenant-context propagation from `api-gateway-microservice` to `products-microservice` for the first bounded flow.
-- [ ] 4.2 Implement tenant-context propagation to `checkout-microservice` and persist ownership on targeted writes.
-- [ ] 4.3 Add explicit missing-context rejection behavior for merchant-owned endpoints touched by this change.
+- [x] 4.1 Implement tenant-context propagation from `api-gateway-microservice` to `products-microservice` for the first bounded flow.
+- [x] 4.2 Implement tenant-context propagation to `checkout-microservice` and persist ownership on targeted writes.
+- [x] 4.3 Add explicit missing-context rejection behavior for merchant-owned endpoints touched by this change.
 
 ## 5. Verification
 

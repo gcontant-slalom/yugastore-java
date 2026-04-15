@@ -12,6 +12,9 @@ public class Order {
     
     @Column(value = "user_id")
     private Integer user_id;
+
+	@Column(value = "tenant_key")
+	private String tenant_key;
     
     @Column(value = "order_details")
     private String order_details;
@@ -36,6 +39,14 @@ public class Order {
 
 	public void setUser_id(Integer user_id) {
 		this.user_id = user_id;
+	}
+
+	public String getTenant_key() {
+		return tenant_key;
+	}
+
+	public void setTenant_key(String tenant_key) {
+		this.tenant_key = tenant_key;
 	}
 
 	public String getOrder_details() {

@@ -44,7 +44,7 @@ public class CheckoutServiceImpl {
 	@Autowired
 	private CassandraOperations cassandraTemplate;
 
-	public Order checkout(String userId) throws NotEnoughProductsInStockException {
+	public Order checkout(String userId, String tenantKey, String companyName) throws NotEnoughProductsInStockException {
 		Map<String, Integer> products = shoppingCartRestClient.getProductsInCart(userId);
 		System.out.println("*** In Checkout products ***");
 		StringBuilder updateCartpreparedStatement = new StringBuilder();
@@ -58,7 +58,7 @@ public class CheckoutServiceImpl {
 				// Refresh quantity for every product before checking
 				System.out.println("*** Checking out product *** " + entry.getKey());
 				productInventory = productInventoryRepository.findById(entry.getKey()).orElse(null);
-				productDetails = productCatalogRestClient.getProductDetails(entry.getKey());
+				productDetails = getProductDetails(entry.getKey(), tenantKey, companyName);
 				
 				if (productInventory.getQuantity() < entry.getValue())
 					throw new NotEnoughProductsInStockException(productDetails.getTitle(), productInventory.getQuantity());
@@ -67,14 +67,23 @@ public class CheckoutServiceImpl {
 						+ entry.getValue() + " where asin = '" + entry.getKey() + "' ;");
 				orderDetails.append(" Product: " + productDetails.getTitle() + ", Quantity: " + entry.getValue() + ";");
 			}
-			double orderTotal = getTotal(products);
+			double orderTotal = getTotal(products, tenantKey, companyName);
 			orderDetails.append(" Order Total is : " + orderTotal);
-			currentOrder = createOrder(userId, orderDetails.toString(), orderTotal);
+			currentOrder = createOrder(userId, tenantKey, orderDetails.toString(), orderTotal);
 			String escapedOrderDetails = escapeCqlLiteral(currentOrder.getOrder_details());
-			updateCartpreparedStatement
-					.append(" INSERT INTO orders (order_id, user_id, order_details, order_time, order_total) VALUES ("
-							+ "'" + currentOrder.getId() + "', '" + currentOrder.getUser_id() + "', '" + escapedOrderDetails
-							+ "', '" + currentOrder.getOrder_time() + "'," + currentOrder.getOrder_total() + ");");
+			if (hasTenantContext(tenantKey)) {
+				String escapedTenantKey = escapeCqlLiteral(currentOrder.getTenant_key());
+				updateCartpreparedStatement
+						.append(" INSERT INTO orders (order_id, tenant_key, user_id, order_details, order_time, order_total) VALUES ("
+								+ "'" + currentOrder.getId() + "', '" + escapedTenantKey + "', '" + currentOrder.getUser_id()
+								+ "', '" + escapedOrderDetails + "', '" + currentOrder.getOrder_time() + "',"
+								+ currentOrder.getOrder_total() + ");");
+			} else {
+				updateCartpreparedStatement
+						.append(" INSERT INTO orders (order_id, user_id, order_details, order_time, order_total) VALUES ("
+								+ "'" + currentOrder.getId() + "', '" + currentOrder.getUser_id() + "', '" + escapedOrderDetails
+								+ "', '" + currentOrder.getOrder_time() + "'," + currentOrder.getOrder_total() + ");");
+			}
 			updateCartpreparedStatement.append(" END TRANSACTION;");
 			System.out.println("Statemet is " + updateCartpreparedStatement.toString());
 			cassandraTemplate.getCqlOperations().execute(updateCartpreparedStatement.toString());
@@ -86,26 +95,38 @@ public class CheckoutServiceImpl {
 
 	}
 
-	private Double getTotal(Map<String, Integer> products) {
+	private Double getTotal(Map<String, Integer> products, String tenantKey, String companyName) {
 		double price = 0.0;
 		for (Map.Entry<String, Integer> entry : products.entrySet()) {
 
 			productInventory = productInventoryRepository.findById(entry.getKey()).orElse(null);
-			productDetails = productCatalogRestClient.getProductDetails(entry.getKey());
+			productDetails = getProductDetails(entry.getKey(), tenantKey, companyName);
 			price = price + productDetails.getPrice() * entry.getValue();
 		}
 		return price;
 	}
 
-	private Order createOrder(String userId, String orderDetails, double orderTotal) {
+	private Order createOrder(String userId, String tenantKey, String orderDetails, double orderTotal) {
 		Order order = new Order();
 		LocalDateTime currentTime = LocalDateTime.now();
 		order.setId(UUID.randomUUID().toString());
 		order.setUser_id(Integer.parseInt(userId));
+		order.setTenant_key(hasTenantContext(tenantKey) ? tenantKey : null);
 		order.setOrder_details(orderDetails);
 		order.setOrder_time(currentTime.toString());
 		order.setOrder_total(orderTotal);
 		return order;
+	}
+
+	private ProductMetadata getProductDetails(String asin, String tenantKey, String companyName) {
+		if (hasTenantContext(tenantKey)) {
+			return productCatalogRestClient.getProductDetails(asin, tenantKey, companyName);
+		}
+		return productCatalogRestClient.getProductDetails(asin);
+	}
+
+	private boolean hasTenantContext(String tenantKey) {
+		return tenantKey != null && !tenantKey.isBlank();
 	}
 
 	private String escapeCqlLiteral(String value) {

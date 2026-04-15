@@ -25,6 +25,7 @@ export class App extends Component {
       merchantContext: null,
       merchantSignupResult: null,
       activeTenantContext: null,
+      cartTenantContext: null,
       tenantLookupPending: false,
       tenantLookupMessage: '',
       authLoaded: false,
@@ -162,7 +163,8 @@ export class App extends Component {
             authMessage: '',
             merchantSignupPending: false,
             merchantSignupMessage: '',
-            cart: { data: {}, total: 0, error: false }
+            cart: { data: {}, total: 0, error: false },
+            cartTenantContext: null
           });
           return null;
         }
@@ -204,16 +206,17 @@ export class App extends Component {
     }
 
     return this.requestJson('/cart/get', { method: 'POST' })
-      .then(cart => this.setState({
+      .then(cart => this.setState(prevState => ({
         cart: {
           data: cart,
           total: this.totalReducer(cart),
           error: false
-        }
-      }))
+        },
+        cartTenantContext: Object.keys(cart || {}).length === 0 ? null : prevState.cartTenantContext
+      })))
       .catch(error => {
         if (error.status === 401) {
-          this.setState({ currentUser: null, authMessage: 'Please sign in to continue.' });
+          this.setState({ currentUser: null, authMessage: 'Please sign in to continue.', cartTenantContext: null });
           return null;
         }
         this.setState({ cart: { ...this.state.cart, error: true } });
@@ -240,7 +243,15 @@ export class App extends Component {
       console.log('Added to Cart '+product.title);
 
       const url = '/cart/add?asin='+(product.id.asin || product.id);
-      this.requestJson(url, { method: 'POST' })
+      const cartTenantContext = this.state.activeTenantContext || null;
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      };
+      if (cartTenantContext && cartTenantContext.tenantKey) {
+        headers['X-Tenant-Key'] = cartTenantContext.tenantKey;
+      }
+      this.requestJson(url, { method: 'POST', headers })
         .then(data => {
             this.setState({
               cart: {
@@ -248,6 +259,7 @@ export class App extends Component {
                 total: this.totalReducer(data),
                 error: false
               },
+              cartTenantContext: Object.keys(data || {}).length === 0 ? null : cartTenantContext,
               authMessage: ''
             });
         })
@@ -286,6 +298,7 @@ export class App extends Component {
                 total: this.totalReducer(data),
                 error: false
               },
+              cartTenantContext: Object.keys(data || {}).length === 0 ? null : this.state.cartTenantContext,
               authMessage: ''
             });
         })
@@ -367,7 +380,8 @@ export class App extends Component {
           authMessage: '',
           merchantSignupPending: false,
           merchantSignupMessage: '',
-          cart: { data: {}, total: 0, error: false }
+          cart: { data: {}, total: 0, error: false },
+          cartTenantContext: null
         });
       });
   }
@@ -479,6 +493,7 @@ export class App extends Component {
           <Route path="/cart" render={() => (
             <Cart
               cart={this.state.cart}
+              cartTenantContext={this.state.cartTenantContext}
               currentUser={this.state.currentUser}
               removeItemFromCart={this.removeItemFromCart}
               fetchCart={this.fetchCart} />

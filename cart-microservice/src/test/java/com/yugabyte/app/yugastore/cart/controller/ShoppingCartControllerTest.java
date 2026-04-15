@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.yugabyte.app.yugastore.cart.domain.CartTenantContext;
 import com.yugabyte.app.yugastore.cart.service.ShoppingCartImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,11 +41,12 @@ class ShoppingCartControllerTest {
     void addProduct_returnsAddedToCartMessage() throws Exception {
         mockMvc.perform(get("/cart-microservice/shoppingCart/addProduct")
                         .param("userid", "user1")
-                        .param("asin", "B001"))
+                        .param("asin", "B001")
+                        .header(ShoppingCartController.TENANT_KEY_HEADER, "northwind-books"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Added to Cart"));
 
-        verify(shoppingCart).addProductToShoppingCart("user1", "B001");
+        verify(shoppingCart).addProductToShoppingCart("user1", "B001", "northwind-books");
     }
 
     @Test
@@ -66,6 +68,16 @@ class ShoppingCartControllerTest {
                         .param("userid", "user1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("{}"));
+    }
+
+    @Test
+    void getCartTenantContext_returnsTenantKeyJson() throws Exception {
+        when(shoppingCart.getCartTenantContext("user1")).thenReturn(new CartTenantContext("northwind-books"));
+
+        mockMvc.perform(get("/cart-microservice/shoppingCart/tenantContext")
+                        .param("userid", "user1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tenantKey").value("northwind-books"));
     }
 
     @Test

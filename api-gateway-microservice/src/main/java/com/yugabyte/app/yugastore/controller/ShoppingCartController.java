@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.yugabyte.app.yugastore.domain.CartTenantContext;
 import com.yugabyte.app.yugastore.domain.CheckoutStatus;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import com.yugabyte.app.yugastore.service.CheckoutServiceRest;
@@ -24,6 +25,8 @@ import com.yugabyte.app.yugastore.service.ShoppingCartServiceRest;
 public class ShoppingCartController {
 
 	public static final String AUTH_USER_ID_HEADER = "X-Authenticated-UserId";
+	public static final String TENANT_KEY_HEADER = "X-Tenant-Key";
+	public static final String MERCHANT_COMPANY_NAME_HEADER = "X-Merchant-Company-Name";
 
 	private final ShoppingCartServiceRest shoppingCartServiceRest;
 
@@ -55,7 +58,7 @@ public class ShoppingCartController {
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/addProduct", produces = "application/json")
 	public ResponseEntity<?> addProductToCart(@RequestParam("asin") String asin, HttpServletRequest request) {
 		String userId = currentUserId(request);
-		shoppingCartServiceRest.addProduct(userId, asin);
+		shoppingCartServiceRest.addProduct(userId, asin, request.getHeader(TENANT_KEY_HEADER));
 		Map<String, Integer> productsInCart = shoppingCartServiceRest.getProductsInCart(userId);
 
 		if (productsInCart == null) {
@@ -63,6 +66,12 @@ public class ShoppingCartController {
 		}
 		return new ResponseEntity<Map<String, Integer>>(productsInCart, HttpStatus.OK);
 
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/tenant-context", produces = "application/json")
+	public ResponseEntity<CartTenantContext> getCartTenantContext(HttpServletRequest request) {
+		String userId = currentUserId(request);
+		return new ResponseEntity<CartTenantContext>(shoppingCartServiceRest.getCartTenantContext(userId), HttpStatus.OK);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/removeProduct", produces = "application/json")
@@ -81,7 +90,11 @@ public class ShoppingCartController {
 	@RequestMapping(method = RequestMethod.POST, value = "/shoppingCart/checkout", produces = "application/json")
 	public ResponseEntity<CheckoutStatus> checkout(HttpServletRequest request) {
 		String userId = currentUserId(request);
-		CheckoutStatus checkoutStatus = checkoutServiceRest.checkout(userId);
+		CartTenantContext cartTenantContext = shoppingCartServiceRest.getCartTenantContext(userId);
+		String tenantKey = request.getHeader(TENANT_KEY_HEADER);
+		String companyName = request.getHeader(MERCHANT_COMPANY_NAME_HEADER);
+		validateCheckoutTenantContext(tenantKey, cartTenantContext);
+		CheckoutStatus checkoutStatus = checkoutServiceRest.checkout(userId, tenantKey, companyName);
 		return new ResponseEntity<CheckoutStatus>(checkoutStatus, HttpStatus.OK);
 	}
 
@@ -95,6 +108,37 @@ public class ShoppingCartController {
 		} catch (ResponseStatusException ex) {
 			throw ex;
 		}
+	}
+
+	private void validateCheckoutTenantContext(String tenantKey, CartTenantContext cartTenantContext) {
+		String normalizedRequestTenantKey = normalizeTenantKey(tenantKey);
+		String cartTenantKey = cartTenantContext == null ? null : normalizeTenantKey(cartTenantContext.getTenantKey());
+
+		if (cartTenantKey == null && normalizedRequestTenantKey == null) {
+			return;
+		}
+
+		if (cartTenantKey == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Shared demo cart checkout must not include tenant context.");
+		}
+
+		if (normalizedRequestTenantKey == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Tenant-aware checkout requires tenant context.");
+		}
+
+		if (!cartTenantKey.equals(normalizedRequestTenantKey)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Checkout tenant context does not match the current cart tenant.");
+		}
+	}
+
+	private String normalizeTenantKey(String tenantKey) {
+		if (tenantKey == null || tenantKey.isBlank()) {
+			return null;
+		}
+		return tenantKey;
 	}
 
 }

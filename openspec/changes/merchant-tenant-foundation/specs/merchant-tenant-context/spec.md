@@ -50,6 +50,11 @@ The system SHALL represent merchant company or store ownership separately from s
 - **WHEN** the platform resolves merchant-admin identities for the same merchant organization
 - **THEN** those identities can be associated to one shared merchant company or store context rather than being treated as separate tenants
 
+#### Scenario: Login service persists tenant and membership foundation without expanding auth scope
+- **WHEN** the first-slice merchant tenant foundation is persisted in `login-microservice`
+- **THEN** the YSQL-backed model remains bounded to tenant records, tenant membership records, and the existing merchant-context response contract
+- **AND** the change does not introduce a new standalone authentication or invitation flow inside `login-microservice`
+
 #### Scenario: First-slice merchant context uses the bounded tenant response shape
 - **WHEN** the platform creates or resolves merchant context in this first slice
 - **THEN** the returned merchant context identifies the tenant with `tenantId`, `tenantKey`, and `companyName`

@@ -32,4 +32,9 @@ public class ProductRankingServiceImpl implements ProductRankingService {
 		return productRankingRepository.getProductsByCategory(category, limit, offset);
 	}
 
+	@Override
+	public List<ProductRanking> getProductsByCategory(String category, int limit, int offset, String tenantKey) {
+		return productRankingRepository.getProductsByCategoryAndTenantKey(category, tenantKey, limit, offset);
+	}
+
 }

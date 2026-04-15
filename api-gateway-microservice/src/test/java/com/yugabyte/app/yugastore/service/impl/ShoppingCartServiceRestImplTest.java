@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.yugabyte.app.yugastore.domain.CartTenantContext;
 import com.yugabyte.app.yugastore.rest.clients.ShoppingCartRestClient;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,9 +30,9 @@ class ShoppingCartServiceRestImplTest {
 
     @Test
     void addProduct_delegatesToClient() {
-        when(shoppingCartRestClient.addProductToCart("u1001", "B001")).thenReturn("Added to Cart");
+        when(shoppingCartRestClient.addProductToCart("u1001", "B001", "northwind-books")).thenReturn("Added to Cart");
 
-        String result = service.addProduct("u1001", "B001");
+        String result = service.addProduct("u1001", "B001", "northwind-books");
 
         assertThat(result).isEqualTo("Added to Cart");
     }
@@ -53,6 +54,17 @@ class ShoppingCartServiceRestImplTest {
         Map<String, Integer> result = service.getProductsInCart("u1001");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getCartTenantContext_delegatesToClient() {
+        CartTenantContext expected = new CartTenantContext();
+        expected.setTenantKey("northwind-books");
+        when(shoppingCartRestClient.getCartTenantContext("u1001")).thenReturn(expected);
+
+        CartTenantContext result = service.getCartTenantContext("u1001");
+
+        assertThat(result.getTenantKey()).isEqualTo("northwind-books");
     }
 
     @Test

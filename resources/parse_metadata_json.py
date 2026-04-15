@@ -2,6 +2,8 @@ import json
 import sys
 import random, math
 
+DEFAULT_TENANT_KEY = 'demo-store'
+
 def safe_encode(str):
     str1 = str.replace('\\', "\\\\")
     return ('"' + str1.replace('"', '\\"').replace("\n"," ").strip() + '"')
@@ -32,6 +34,8 @@ def parse_and_write_metadata(product, f_products, f_rankings, f_inventory):
 
     if "description" in product:
         f_products.write(product["asin"])
+        f_products.write(",")
+        f_products.write(DEFAULT_TENANT_KEY)
         f_products.write(",")
         if "title" in product:
             f_products.write(safe_encode(product["title"]))
@@ -75,6 +79,8 @@ def parse_and_write_metadata(product, f_products, f_rankings, f_inventory):
         #Product Inventory
         f_inventory.write(product["asin"])
         f_inventory.write(",")
+        f_inventory.write(DEFAULT_TENANT_KEY)
+        f_inventory.write(",")
         f_inventory.write(str(random.randint(100, 1000)))
         f_inventory.write("\n")
         if ("salesRank" in product):
@@ -83,6 +89,8 @@ def parse_and_write_metadata(product, f_products, f_rankings, f_inventory):
                 f_rankings.write(",")
                 f_rankings.write(safe_encode(category))
                 f_rankings.write(",")
+            f_rankings.write(DEFAULT_TENANT_KEY)
+            f_rankings.write(",")
                 f_rankings.write(str(rank))
                 f_rankings.write(",")
                 if "title" in product:
@@ -121,9 +129,11 @@ f_inventory = open('cronos_product_inventory.csv', 'w')
 # Read and parse the metadata input file one line at a time. The output is 2 csv files, which have
 # the following columns:
 #   cronos_products.csv:
-#     asin, title, price, imUrl, also_bought, also_viewed, bought_together, brand, categories
+#     asin, tenant_key, title, description, price, imUrl, also_bought, also_viewed, bought_together, buy_after_viewing, brand, categories, num_reviews, num_stars, avg_stars
 #   cronos_product_rankings.csv
-#     asin, category, sales_rank
+#     asin, category, tenant_key, sales_rank, title, price, imurl, num_reviews, num_stars, avg_stars
+#   cronos_product_inventory.csv
+#     asin, tenant_key, quantity
 #
 with open(metadata_file) as f:
     for line in f:

@@ -38,6 +38,8 @@ public class DashboardRestConsumer {
 	RestTemplate restTemplate;
 
 	public static final String AUTH_USER_ID_HEADER = "X-Authenticated-UserId";
+	public static final String TENANT_KEY_HEADER = "X-Tenant-Key";
+	public static final String MERCHANT_COMPANY_NAME_HEADER = "X-Merchant-Company-Name";
 	
 	@Value("${cronos.yugabyte.api:http://localhost:8081/api/v1}")
 	String restUrlBase;
@@ -121,12 +123,16 @@ public class DashboardRestConsumer {
 	}
 
 	public ResponseEntity<String> addProductToCart(String asin, String userId) {
+		return addProductToCart(asin, userId, null);
+	}
+
+	public ResponseEntity<String> addProductToCart(String asin, String userId, String tenantKey) {
 
 		String restURL = restUrlBase + "shoppingCart/addProduct";
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("asin", asin);
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(params,
-				buildHeaders(userId, MediaType.APPLICATION_FORM_URLENCODED));
+				buildHeaders(userId, tenantKey, null, MediaType.APPLICATION_FORM_URLENCODED));
 
 		return exchange(restURL, HttpMethod.POST, request);
 	}
@@ -156,14 +162,24 @@ public class DashboardRestConsumer {
 		return exchange(restURL, HttpMethod.POST, request);
 	}
 
+	public ResponseEntity<String> getCartTenantContext(String userId) {
+		String restURL = restUrlBase + "shoppingCart/tenant-context";
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
+	}
+
 	public String checkout() {
 		return checkout(null).getBody();
 	}
 
 	public ResponseEntity<String> checkout(String userId) {
+		return checkout(userId, null, null);
+	}
+
+	public ResponseEntity<String> checkout(String userId, String tenantKey, String companyName) {
 
 		String restURL = restUrlBase + "shoppingCart/checkout";
-		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, tenantKey, companyName, MediaType.APPLICATION_JSON));
 		return exchange(restURL, HttpMethod.POST, request);
 	}
 
@@ -218,6 +234,10 @@ public class DashboardRestConsumer {
 	}
 
 	private HttpHeaders buildHeaders(String userId, MediaType contentType) {
+		return buildHeaders(userId, null, null, contentType);
+	}
+
+	private HttpHeaders buildHeaders(String userId, String tenantKey, String companyName, MediaType contentType) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		if (contentType != null) {
@@ -225,6 +245,12 @@ public class DashboardRestConsumer {
 		}
 		if (userId != null && !userId.isBlank()) {
 			headers.add(AUTH_USER_ID_HEADER, userId);
+		}
+		if (tenantKey != null && !tenantKey.isBlank()) {
+			headers.add(TENANT_KEY_HEADER, tenantKey);
+		}
+		if (companyName != null && !companyName.isBlank()) {
+			headers.add(MERCHANT_COMPANY_NAME_HEADER, companyName);
 		}
 		return headers;
 	}

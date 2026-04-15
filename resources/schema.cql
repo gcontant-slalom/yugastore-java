@@ -6,6 +6,7 @@ CREATE KEYSPACE IF NOT EXISTS cronos;
 //
 CREATE TABLE cronos.products (
     asin text PRIMARY KEY,
+    tenant_key text,
     title text,
     description text,
     price double,
@@ -32,6 +33,7 @@ CREATE TABLE cronos.products (
 CREATE TABLE cronos.product_rankings (
     asin text,
     category text,
+    tenant_key text,
     sales_rank int,
     title text,
     price double,
@@ -55,6 +57,7 @@ CREATE INDEX top_products_in_category
 
 CREATE TABLE cronos.orders (
     order_id text PRIMARY KEY,
+    tenant_key text,
     user_id text,
     order_details text,
     order_time text,
@@ -65,6 +68,7 @@ CREATE TABLE cronos.orders (
 // Product Inventory Table
 CREATE TABLE cronos.product_inventory (
     asin text PRIMARY KEY,
+    tenant_key text,
     quantity int
 ) WITH default_time_to_live = 0
     AND transactions = {'enabled': 'true'};

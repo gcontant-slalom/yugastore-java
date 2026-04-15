@@ -118,7 +118,8 @@ class ProductCatalogControllerTest {
 
     @Test
     void getProducts_acceptsTenantContextHeaders() throws Exception {
-        when(productService.findAllProductsPageable(2, 0)).thenReturn(List.of(buildProduct("B001", "Title 1", 5.0)));
+        when(productService.findAllProductsPageable(2, 0, "northwind-books"))
+            .thenReturn(List.of(buildProduct("B001", "Title 1", 5.0, "northwind-books")));
 
         mockMvc.perform(get("/products-microservice/products")
                         .header("X-Tenant-Key", "northwind-books")
@@ -129,15 +130,53 @@ class ProductCatalogControllerTest {
                 .andExpect(jsonPath("$[0].id").value("B001"));
     }
 
+    @Test
+    void getProductDetails_acceptsTenantContextHeaders() throws Exception {
+        when(productService.findById("B001", "northwind-books"))
+                .thenReturn(Optional.of(buildProduct("B001", "Gadget X", 29.99, "northwind-books")));
+
+        mockMvc.perform(get("/products-microservice/product/B001")
+                        .header("X-Tenant-Key", "northwind-books")
+                        .header("X-Merchant-Company-Name", "Northwind Books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("B001"))
+                .andExpect(jsonPath("$.tenantKey").value("northwind-books"));
+    }
+
+    @Test
+    void getProductsByCategory_acceptsTenantContextHeaders() throws Exception {
+        List<ProductRanking> rankings = List.of(buildRanking("B001", "Electronics", 1, "northwind-books"));
+        when(productRankingService.getProductsByCategory("Electronics", 2, 0, "northwind-books"))
+                .thenReturn(rankings);
+
+        mockMvc.perform(get("/products-microservice/products/category/Electronics")
+                        .header("X-Tenant-Key", "northwind-books")
+                        .header("X-Merchant-Company-Name", "Northwind Books")
+                        .param("limit", "2")
+                        .param("offset", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].salesRank").value(1))
+                .andExpect(jsonPath("$[0].tenantKey").value("northwind-books"));
+    }
+
     private ProductMetadata buildProduct(String id, String title, double price) {
+        return buildProduct(id, title, price, null);
+    }
+
+    private ProductMetadata buildProduct(String id, String title, double price, String tenantKey) {
         ProductMetadata p = new ProductMetadata();
         p.setId(id);
         p.setTitle(title);
         p.setPrice(price);
+        p.setTenantKey(tenantKey);
         return p;
     }
 
     private ProductRanking buildRanking(String asin, String category, int salesRank) {
+        return buildRanking(asin, category, salesRank, null);
+    }
+
+    private ProductRanking buildRanking(String asin, String category, int salesRank, String tenantKey) {
         ProductRankingKey key = new ProductRankingKey();
         key.setId(asin);
         key.setCategory(category);
@@ -147,6 +186,7 @@ class ProductCatalogControllerTest {
         ranking.setSalesRank(salesRank);
         ranking.setTitle("Title for " + asin);
         ranking.setPrice(9.99);
+        ranking.setTenantKey(tenantKey);
         return ranking;
     }
 }

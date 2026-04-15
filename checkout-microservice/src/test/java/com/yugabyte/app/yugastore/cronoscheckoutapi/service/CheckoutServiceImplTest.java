@@ -2,7 +2,6 @@ package com.yugabyte.app.yugastore.cronoscheckoutapi.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,14 +59,14 @@ class CheckoutServiceImplTest {
     void checkout_whenCartIsEmpty_returnsNull() throws NotEnoughProductsInStockException {
         when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(Collections.emptyMap());
 
-        Order result = checkoutService.checkout("42");
+        Order result = checkoutService.checkout("42", null, null);
 
         assertThat(result).isNull();
         verify(shoppingCartRestClient).clearCart("42");
     }
 
     @Test
-    void checkout_whenSufficientInventory_createsOrderAndClearsCart()
+    void checkout_whenSufficientInventoryAndTenantContext_createsTenantOwnedOrderAndClearsCart()
             throws NotEnoughProductsInStockException {
         Map<String, Integer> cart = new HashMap<>(Map.of("B001", 2));
         ProductInventory inventory = buildInventory("B001", 10);
@@ -75,13 +74,14 @@ class CheckoutServiceImplTest {
 
         when(shoppingCartRestClient.getProductsInCart("42")).thenReturn(cart);
         when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
-        when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
+        when(productCatalogRestClient.getProductDetails("B001", "northwind-books", "Northwind Books")).thenReturn(product);
 
-        Order result = checkoutService.checkout("42");
+        Order result = checkoutService.checkout("42", "northwind-books", "Northwind Books");
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isNotBlank();
         assertThat(result.getUser_id()).isEqualTo(42);
+        assertThat(result.getTenant_key()).isEqualTo("northwind-books");
         assertThat(result.getOrder_total()).isEqualTo(50.0);
         assertThat(result.getOrder_details()).contains("Gadget X");
         verify(shoppingCartRestClient).clearCart("42");
@@ -97,7 +97,7 @@ class CheckoutServiceImplTest {
         when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
         when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
 
-        assertThatThrownBy(() -> checkoutService.checkout("42"))
+        assertThatThrownBy(() -> checkoutService.checkout("42", null, null))
                 .isInstanceOf(NotEnoughProductsInStockException.class)
                 .hasMessageContaining("Gadget X");
     }
@@ -113,7 +113,7 @@ class CheckoutServiceImplTest {
         when(productInventoryRepository.findById("B001")).thenReturn(Optional.of(inventory));
         when(productCatalogRestClient.getProductDetails("B001")).thenReturn(product);
 
-        checkoutService.checkout("42");
+        checkoutService.checkout("42", null, null);
 
         ArgumentCaptor<String> statementCaptor = ArgumentCaptor.forClass(String.class);
         verify(cqlOperations).execute(statementCaptor.capture());

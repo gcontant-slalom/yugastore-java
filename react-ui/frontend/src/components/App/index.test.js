@@ -550,6 +550,60 @@ describe('App', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  it('stores active tenant context when adding a tenant-scoped product to the cart', async () => {
+    const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
+    app.state.activeTenantContext = { tenantKey: 'northwind-books', companyName: 'Northwind Books' };
+    global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ 'sku-1': 1 }))
+    }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    app.addItemToCart({ id: { asin: 'sku-1' }, title: 'Home Item' });
+    await flushMicrotasks();
+    await flushMicrotasks();
+    await flushMicrotasks();
+    await flushMicrotasks();
+
+    expect(app.state.cartTenantContext).toEqual({ tenantKey: 'northwind-books', companyName: 'Northwind Books' });
+    expect(global.fetch).toHaveBeenCalledWith('/cart/add?asin=sku-1', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({
+        'X-Tenant-Key': 'northwind-books'
+      })
+    }));
+  });
+
+  it('clears cart tenant context when fetchCart returns an empty cart', async () => {
+    const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
+    app.state.cartTenantContext = { tenantKey: 'northwind-books', companyName: 'Northwind Books' };
+    global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({}))
+    }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    app.fetchCart();
+    await flushMicrotasks();
+    await flushMicrotasks();
+    await flushMicrotasks();
+    await flushMicrotasks();
+
+    expect(app.state.cartTenantContext).toBeNull();
+  });
+
   it('totals only own enumerable cart values', () => {
     const app = new App({});
     const data = Object.create({ inherited: '100' });

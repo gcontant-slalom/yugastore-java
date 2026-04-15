@@ -9,6 +9,10 @@ public interface ProductService {
 
     Optional<ProductMetadata> findById(String id);
 
+    Optional<ProductMetadata> findById(String id, String tenantKey);
+
     List<ProductMetadata> findAllProductsPageable(int limit, int offset);
+
+    List<ProductMetadata> findAllProductsPageable(int limit, int offset, String tenantKey);
 
 }

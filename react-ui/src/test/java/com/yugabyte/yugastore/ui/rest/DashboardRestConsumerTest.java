@@ -84,6 +84,57 @@ class DashboardRestConsumerTest {
 		assertThat(response).contains("B001");
 		server.verify();
 	}
+
+	@Test
+	void addProductToCart_forwardsTenantKeyHeader() {
+		server.expect(requestTo("http://localhost:8081/api/v1/shoppingCart/addProduct"))
+				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(DashboardRestConsumer.AUTH_USER_ID_HEADER, "42"))
+				.andExpect(header(DashboardRestConsumer.TENANT_KEY_HEADER, "northwind-books"))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"B001\":1}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.addProductToCart("B001", "42", "northwind-books");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		server.verify();
+	}
+
+	@Test
+	void getCartTenantContext_targetsGatewayCartTenantContextRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/shoppingCart/tenant-context"))
+				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(DashboardRestConsumer.AUTH_USER_ID_HEADER, "42"))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"tenantKey\":\"northwind-books\"}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.getCartTenantContext("42");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("northwind-books");
+		server.verify();
+	}
+
+	@Test
+	void checkout_forwardsTenantContextHeaders() {
+		server.expect(requestTo("http://localhost:8081/api/v1/shoppingCart/checkout"))
+				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(DashboardRestConsumer.AUTH_USER_ID_HEADER, "42"))
+				.andExpect(header(DashboardRestConsumer.TENANT_KEY_HEADER, "northwind-books"))
+				.andExpect(header(DashboardRestConsumer.MERCHANT_COMPANY_NAME_HEADER, "Northwind Books"))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"status\":\"SUCCESS\",\"orderNumber\":\"order-abc\"}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.checkout("42", "northwind-books", "Northwind Books");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("order-abc");
+
+		server.verify();
+	}
 	
 	void createMerchantSignup_targetsGatewayMerchantSignupRoute() {
 		server.expect(requestTo("http://localhost:8081/api/v1/merchant-signup"))

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,9 +67,11 @@ public class CronosProductsController {
   }
 
   @PostMapping("/cart/add")
-	public ResponseEntity<String> addProductToCart(@RequestParam("asin") String asin, HttpSession session) {
+	public ResponseEntity<String> addProductToCart(@RequestParam("asin") String asin,
+			@RequestHeader(value = DashboardRestConsumer.TENANT_KEY_HEADER, required = false) String tenantKey,
+			HttpSession session) {
 		AuthUser authUser = requireAuthenticatedUser(session);
-		return dashboardRestConsumer.addProductToCart(asin, authUser.getUserId());
+		return dashboardRestConsumer.addProductToCart(asin, authUser.getUserId(), tenantKey);
 	}
   
   @PostMapping("/cart/get")
@@ -76,11 +79,20 @@ public class CronosProductsController {
 		AuthUser authUser = requireAuthenticatedUser(session);
 		return dashboardRestConsumer.showCart(authUser.getUserId());
 	}
+
+	@GetMapping("/cart/tenant-context")
+	public ResponseEntity<String> getCartTenantContext(HttpSession session) {
+		AuthUser authUser = requireAuthenticatedUser(session);
+		return dashboardRestConsumer.getCartTenantContext(authUser.getUserId());
+	}
   
   @PostMapping("/cart/checkout")
-	public ResponseEntity<String> checkoutCart(HttpSession session) {
+	public ResponseEntity<String> checkoutCart(
+			@RequestHeader(value = DashboardRestConsumer.TENANT_KEY_HEADER, required = false) String tenantKey,
+			@RequestHeader(value = DashboardRestConsumer.MERCHANT_COMPANY_NAME_HEADER, required = false) String companyName,
+			HttpSession session) {
 		AuthUser authUser = requireAuthenticatedUser(session);
-		return dashboardRestConsumer.checkout(authUser.getUserId());
+		return dashboardRestConsumer.checkout(authUser.getUserId(), tenantKey, companyName);
 	}
 
   @RequestMapping(method = RequestMethod.POST, value = "/cart/remove")

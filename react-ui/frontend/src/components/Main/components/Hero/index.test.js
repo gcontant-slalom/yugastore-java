@@ -20,6 +20,7 @@ describe('Hero', () => {
     ReactDOM.render(<Hero />, container);
 
     expect(container.querySelector('.hero')).not.toBeNull();
-    expect(container.querySelector('img').getAttribute('alt')).toBe('background-image');
+    expect(container.querySelector('img')).not.toBeNull();
+    expect(container.querySelector('img').getAttribute('alt')).toBe('');
   });
 });

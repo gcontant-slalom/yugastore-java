@@ -8,6 +8,7 @@ $ python parse_metadata_json.py metadata_strict_small.json
 The above should result in following two files that can be loaded into YugabyteDB subsequently:
 * `cronos_products.csv`
 * `cronos_product_rankings.csv`
+* `cronos_product_inventory.csv`
 
 
 ## Loading data
@@ -24,7 +25,7 @@ $ chmod +x cassandra-loader
 Load the data in `cronos_products.csv` into YugabyteDB by running the following command:
 ```
 $ cassandra-loader -f cronos_products.csv -host localhost -schema \
-    "cronos.products(asin, title, price, imUrl, also_bought, also_viewed, bought_together, brand, categories)"
+    "cronos.products(asin, tenant_key, title, description, price, imUrl, also_bought, also_viewed, bought_together, buy_after_viewing, brand, categories, num_reviews, num_stars, avg_stars)"
 ```
 
 You should see output as follows:
@@ -39,7 +40,7 @@ Lines Processed: 	9  Rate: 	0.0
 Load the data in `cronos_product_rankings.csv` into YugabyteDB by running the following command:
 ```
 $ cassandra-loader -f cronos_product_rankings.csv -host localhost -schema \
-    "cronos.product_rankings(asin, category, sales_rank)"
+    "cronos.product_rankings(asin, category, tenant_key, sales_rank, title, price, imurl, num_reviews, num_stars, avg_stars)"
 ```
 
 You should see the following as output:
@@ -48,6 +49,16 @@ You should see the following as output:
 *** DONE: cronos_product_rankings.csv  number of lines processed: 8 (8 inserted)
 Lines Processed: 	7  Rate: 	0.0
 ```
+
+### Load `cronos_product_inventory.csv`
+
+Load the data in `cronos_product_inventory.csv` into YugabyteDB by running the following command:
+```
+$ cassandra-loader -f cronos_product_inventory.csv -host localhost -schema \
+    "cronos.product_inventory(asin, tenant_key, quantity)"
+```
+
+The generated seed assets assign all demo rows to the default tenant key `demo-store` so the shared root storefront can keep using the current sample catalog until later ownership-aware flows are implemented.
 
 ## Querying Data
 
