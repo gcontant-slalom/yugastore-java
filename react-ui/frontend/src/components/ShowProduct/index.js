@@ -10,18 +10,36 @@ import './index.css';
 class ShowProduct extends Component {
   state = {product_id: "", product: undefined, productAlsoBought: []}
 
+<<<<<<< HEAD
   routeProductId = () => this.props.match.params.asin || this.props.match.params.id
 
   componentDidMount() {
     var new_product_id = this.routeProductId();
+=======
+  getProductIdFromRoute = (props = this.props) => {
+    return props.match.params.asin || props.match.params.id;
+  }
+
+  componentDidMount() {
+    var new_product_id = this.getProductIdFromRoute();
+>>>>>>> 3972fedbe9b4d8d1ba7a4da6feabb5577aa4a7c2
     this.fetchProductDetails(new_product_id)
+  }
+
+  componentDidUpdate(prevProps) {
+    const previousProductId = this.getProductIdFromRoute(prevProps);
+    const nextProductId = this.getProductIdFromRoute();
+
+    if (previousProductId !== nextProductId) {
+      this.fetchProductDetails(nextProductId);
+    }
   }
 
   fetchProductDetails = (new_product_id) => {
     if (new_product_id !== undefined &&
         this.state.product_id !== undefined &&
         new_product_id !== this.state.product_id) {
-      this.setState({ product_id: '' + new_product_id });
+      this.setState({ product_id: '' + new_product_id, product: undefined, productAlsoBought: [] });
       var url = '/products/details?asin=' + new_product_id;
       console.log("Fetching url: " + url);
       fetch(url)
@@ -48,8 +66,11 @@ class ShowProduct extends Component {
   }
 
   render () {
+<<<<<<< HEAD
     var new_product_id = this.routeProductId();
     this.fetchProductDetails(new_product_id)
+=======
+>>>>>>> 3972fedbe9b4d8d1ba7a4da6feabb5577aa4a7c2
     const currentProduct = this.state.product;
     if (!currentProduct) {
       return ("");      

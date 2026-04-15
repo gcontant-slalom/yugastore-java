@@ -85,7 +85,7 @@ describe('ShowProduct', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={['/item/sku-1']}>
-          <Route path="/item/:id" render={props => <ShowProduct {...props} addItemToCart={addItemToCart} />} />
+          <Route path="/item/:asin" render={props => <ShowProduct {...props} addItemToCart={addItemToCart} />} />
         </MemoryRouter>,
         container
       );
@@ -132,7 +132,7 @@ describe('ShowProduct', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={['/item/sku-9']}>
-          <Route path="/item/:id" render={props => <ShowProduct {...props} addItemToCart={jest.fn()} />} />
+          <Route path="/item/:asin" render={props => <ShowProduct {...props} addItemToCart={jest.fn()} />} />
         </MemoryRouter>,
         container
       );
@@ -145,7 +145,7 @@ describe('ShowProduct', () => {
   });
 
   it('ignores related product responses that do not contain an id', async () => {
-    const instance = new ShowProduct({ match: { params: { id: 'sku-1' } }, addItemToCart: jest.fn() });
+    const instance = new ShowProduct({ match: { params: { asin: 'sku-1' } }, addItemToCart: jest.fn() });
     instance.state = { product_id: 'sku-1', product: mainProduct, productAlsoBought: [] };
     instance.setState = jest.fn(update => {
       const nextState = typeof update === 'function' ? update(instance.state) : update;
@@ -163,5 +163,23 @@ describe('ShowProduct', () => {
     await flushPromises();
 
     expect(instance.state.productAlsoBought).toEqual([]);
+  });
+
+  it('loads product details from the actual asin route param', async () => {
+    const addItemToCart = jest.fn();
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/item/sku-1']}>
+          <Route path="/item/:asin" render={props => <ShowProduct {...props} addItemToCart={addItemToCart} />} />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Primary Product');
+    expect(global.fetch).toHaveBeenCalledWith('/products/details?asin=sku-1');
   });
 });
