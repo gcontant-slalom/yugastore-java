@@ -1,13 +1,28 @@
 const path = require('path');
+const fs = require('fs');
 const { runBootstrap } = require('./bootstrap.cjs');
 const { runReset } = require('./reset.cjs');
 const {
   createRunContext,
+  e2eRoot,
   loadJson,
   parseArgs,
   runCommand,
   writeRunSummary
 } = require('./shared.cjs');
+
+function printSummary(filePath, stream = process.stdout) {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+
+  const contents = fs.readFileSync(filePath, 'utf8').trim();
+  if (!contents) {
+    return;
+  }
+
+  stream.write(`${contents}\n`);
+}
 
 async function runScope(scope) {
   const scopes = loadJson('e2e/config/scopes.json');
@@ -25,6 +40,7 @@ async function runScope(scope) {
   });
 
   if (!bootstrapPreReset.ok) {
+    const summaryText = path.join(runContext.runDir, 'bootstrap-pre-reset-summary.txt');
     writeRunSummary(runContext, 'Yugastore E2E Scope Runner', {
       scope,
       ok: false,
@@ -40,6 +56,7 @@ async function runScope(scope) {
         `See ${path.join(runContext.runDir, 'bootstrap-pre-reset-summary.json')} for the detailed bootstrap output.`
       ]
     });
+    printSummary(summaryText, process.stderr);
     return false;
   }
 
@@ -49,6 +66,7 @@ async function runScope(scope) {
     summaryName: 'reset'
   });
   if (!resetSummary.ok) {
+    const summaryText = path.join(runContext.runDir, 'reset-summary.txt');
     writeRunSummary(runContext, 'Yugastore E2E Scope Runner', {
       scope,
       ok: false,
@@ -64,6 +82,7 @@ async function runScope(scope) {
         `See ${path.join(runContext.runDir, 'reset-summary.json')} for the detailed reset output.`
       ]
     });
+    printSummary(summaryText, process.stderr);
     return false;
   }
 
@@ -74,6 +93,7 @@ async function runScope(scope) {
     skipDataChecks: false
   });
   if (!bootstrapPostReset.ok) {
+    const summaryText = path.join(runContext.runDir, 'bootstrap-post-reset-summary.txt');
     writeRunSummary(runContext, 'Yugastore E2E Scope Runner', {
       scope,
       ok: false,
@@ -89,22 +109,26 @@ async function runScope(scope) {
         `See ${path.join(runContext.runDir, 'bootstrap-post-reset-summary.json')} for the detailed bootstrap output.`
       ]
     });
+    printSummary(summaryText, process.stderr);
     return false;
   }
 
   const playwrightArgs = [
+    '--no-install',
     'playwright',
     'test',
     '--config',
-    path.join('e2e', 'playwright.config.cjs'),
+    'playwright.config.cjs',
     ...scopeConfig.playwrightArgs
   ];
 
   const playwrightResult = runCommand('npx', playwrightArgs, {
+    cwd: e2eRoot,
     env: {
       E2E_RUN_ARTIFACT_DIR: runContext.playwrightDir,
       E2E_RUN_PLAYWRIGHT_REPORT_DIR: path.join(runContext.playwrightDir, 'html-report')
-    }
+    },
+    stdio: 'inherit'
   });
 
   const ok = playwrightResult.status === 0;
@@ -133,7 +157,7 @@ async function runScope(scope) {
         ok,
         detail: ok
           ? `Scope ${scope} completed successfully`
-          : (playwrightResult.stderr || playwrightResult.stdout || 'Playwright returned a non-zero exit code').trim()
+          : 'Playwright returned a non-zero exit code'
       }
     ],
     notes: [
@@ -144,7 +168,9 @@ async function runScope(scope) {
   });
 
   if (!ok) {
-    process.stderr.write(playwrightResult.stderr || playwrightResult.stdout || 'Playwright failed.');
+    process.stderr.write('Playwright failed. See the terminal output above for details.');
+  } else {
+    printSummary(runContext.summaryText);
   }
 
   return ok;

@@ -100,7 +100,8 @@ function runCommand(command, args, options = {}) {
     env: { ...process.env, ...(options.env || {}) },
     encoding: 'utf8',
     input: options.input,
-    shell: false
+    shell: false,
+    stdio: options.stdio || 'pipe'
   });
 }
 

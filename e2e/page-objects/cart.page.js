@@ -10,6 +10,11 @@ class CartPage {
     await expect(this.page.getByRole('heading', { name: /Items in cart|Thank you!/ })).toBeVisible();
   }
 
+  async expectSignInRequired() {
+    await expect(this.page.locator('.cart-container')).toContainText('Please sign in to view and modify your cart.');
+    await expect(this.page.getByRole('link', { name: 'Go to sign in' })).toBeVisible();
+  }
+
   async expectProduct(title) {
     await expect(this.page.locator('.cart-item .details', { hasText: title })).toBeVisible();
   }
@@ -24,6 +29,14 @@ class CartPage {
   async checkout() {
     await this.page.getByRole('button', { name: 'Checkout' }).click();
     await expect(this.page.getByRole('heading', { name: 'Thank you!' })).toBeVisible();
+  }
+
+  async removeProduct(title) {
+    const cartItem = this.page.locator('.cart-item').filter({
+      has: this.page.locator('.details', { hasText: title })
+    }).first();
+    await expect(cartItem).toBeVisible();
+    await cartItem.getByRole('button', { name: 'Remove' }).click();
   }
 
   async expectOrderConfirmation() {
