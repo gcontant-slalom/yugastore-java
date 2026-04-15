@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Router } from 'react-router-dom';
+import { createMemoryHistory } from 'history';
 import WrappedApp, { App } from './index';
 
 jest.mock('../Cart', () => props => (
@@ -316,6 +317,180 @@ describe('App', () => {
 
     expect(container.textContent).toContain('Create your merchant tenant');
     expect(container.querySelector('input[name="tenantKey"]').value).toBe('northwind-books');
+  });
+
+  it('does not restore the merchant-created confirmation after a fresh onboarding page load', async () => {
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({}))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([]))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/northwind-books/signup']}>
+          <WrappedApp />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await act(async () => {
+      Simulate.change(container.querySelector('input[name="companyName"]'), { target: { name: 'companyName', value: 'Northwind Books' } });
+      Simulate.change(container.querySelector('input[name="tenantKey"]'), { target: { name: 'tenantKey', value: 'northwind-books' } });
+      await flushPromises();
+    });
+
+    await act(async () => {
+      Simulate.submit(container.querySelector('.auth-form'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Merchant tenant created');
+    expect(container.textContent).toContain('Northwind Books is now linked to your account.');
+
+    ReactDOM.unmountComponentAtNode(container);
+
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({}))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([{ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }]))
+      }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/northwind-books/signup']}>
+          <WrappedApp />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Create your merchant tenant');
+    expect(container.textContent).toContain('Your tenants');
+    expect(container.textContent).toContain('Northwind Books');
+    expect(container.textContent).not.toContain('Merchant tenant created');
+  });
+
+  it('clears the merchant-created confirmation after leaving and returning to onboarding', async () => {
+    const history = createMemoryHistory({ initialEntries: ['/northwind-books/signup'] });
+
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({}))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([]))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <Router history={history}>
+          <WrappedApp />
+        </Router>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await act(async () => {
+      Simulate.change(container.querySelector('input[name="companyName"]'), { target: { name: 'companyName', value: 'Northwind Books' } });
+      Simulate.change(container.querySelector('input[name="tenantKey"]'), { target: { name: 'tenantKey', value: 'northwind-books' } });
+      await flushPromises();
+    });
+
+    await act(async () => {
+      Simulate.submit(container.querySelector('.auth-form'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Merchant tenant created');
+
+    await act(async () => {
+      history.push('/Books');
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('products-page-Books');
+
+    await act(async () => {
+      history.push('/northwind-books/signup');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Create your merchant tenant');
+    expect(container.textContent).toContain('Your tenants');
+    expect(container.textContent).toContain('Northwind Books');
+    expect(container.textContent).not.toContain('Merchant tenant created');
   });
 
   it('resolves tenant storefront context from the slug route', async () => {

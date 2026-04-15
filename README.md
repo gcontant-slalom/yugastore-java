@@ -265,6 +265,13 @@ $ ./mvnw spring-boot:run
 
 Now browse to the marketplace app at [http://localhost:8080/](http://localhost:8080/).
 
+### Local verification notes for tenant foundation
+
+- The checked-in sample catalog is still seeded only for the shared demo storefront at `/`.
+- The seeded YCQL rows carry the default tenant key `demo-store` so the root route continues to show the existing sample catalog after schema initialization and seed load.
+- Merchant onboarding and tenant-routing verification now happens separately from that shared root catalog path: sign in, open `/{tenantSlug}/signup`, create a tenant, and then verify tenant-specific routing at `/{tenantSlug}`.
+- Creating a merchant tenant does not clone the checked-in sample catalog into that new tenant context. If you want tenant-scoped catalog results instead of routing-only verification, you must load or create tenant-owned product data for that tenant key.
+
 # Running the app in docker containers
 
 The Docker images are built along with the binaries when `./mvnw -DskipTests package` was run.
@@ -275,6 +282,8 @@ $ ./docker-run.sh
 ```
 Check all the services are registered on the [eureka-server](http://127.0.0.1:8761/).
 Once all services are registered, you can browse the marketplace app at [http://localhost:8080/](http://localhost:8080/).
+
+The same tenant-foundation verification notes apply to the Docker startup path: the seeded demo catalog remains available at `/`, while merchant signup and tenant-route checks should be exercised through `/{tenantSlug}/signup` and `/{tenantSlug}` after sign-in.
 
 
 

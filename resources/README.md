@@ -60,6 +60,8 @@ $ cassandra-loader -f cronos_product_inventory.csv -host localhost -schema \
 
 The generated seed assets assign all demo rows to the default tenant key `demo-store` so the shared root storefront can keep using the current sample catalog until later ownership-aware flows are implemented.
 
+That default tenant seed supports the shared root route `/` only. New merchant tenants created through `/{tenantSlug}/signup` do not automatically receive copies of these catalog rows, so tenant-route verification and tenant-owned catalog verification are distinct local workflows.
+
 ## Querying Data
 
 - To query a product and get its details:

@@ -30,6 +30,6 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 ## 5. Verification
 
-- [ ] 5.1 Add focused tests for merchant onboarding routing, tenant-context propagation, and ownership persistence in the touched modules.
-- [ ] 5.2 Add focused UI and regression coverage proving the merchant-tenant-created confirmation is absent on reload and after leaving then returning to the onboarding page.
-- [ ] 5.3 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.
+- [x] 5.1 Add focused tests for merchant onboarding routing, tenant-context propagation, and ownership persistence in the touched modules.
+- [x] 5.2 Add focused UI and regression coverage proving the merchant-tenant-created confirmation is absent on reload and after leaving then returning to the onboarding page.
+- [x] 5.3 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.

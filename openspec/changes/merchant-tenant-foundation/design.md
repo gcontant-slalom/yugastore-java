@@ -149,6 +149,19 @@ Recommended decision: keep the first-slice merchant context intentionally small 
 - Add focused verification for missing-context rejection and ownership persistence.
 - If rollback is needed, retain the default merchant mapping and revert only the ownership-aware contract changes.
 
+## Verification Notes
+
+Focused verification for task 5.1 is already covered across the touched modules and is intentionally split by boundary instead of concentrated in one end-to-end-only test layer.
+
+- `login-microservice` covers merchant signup, duplicate-slug rejection, merchant-context lookup by tenant slug, and tenant-plus-membership persistence for the first merchant-admin path.
+- `products-microservice` covers tenant-context acceptance on the targeted catalog flow so tenant-aware storefront requests do not rely on the shared demo-user fallback.
+- `checkout-microservice` covers tenant ownership persistence on first-slice order records created from tenant-aware checkout requests.
+- `cart-microservice` covers cart tenant ownership persistence plus explicit rejection when mixed or missing tenant context would break cart ownership consistency.
+- `api-gateway-microservice` covers canonical public tenant lookup, downstream tenant-context propagation, and explicit rejection for checkout requests whose tenant context is missing or mismatched.
+- `react-ui` covers canonical browser routing for `/`, `/{tenantSlug}`, and `/{tenantSlug}/signup`, transient onboarding success behavior, and cart reload behavior when tenant context must be recovered before follow-on requests.
+
+This split keeps the verification surface close to each contract boundary while still providing end-to-end confidence across onboarding routing, tenant-context propagation, and ownership persistence.
+
 ## Open Questions
 
 - What minimum merchant-company fields are required beyond company or store name?

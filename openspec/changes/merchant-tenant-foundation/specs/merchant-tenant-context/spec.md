@@ -120,3 +120,12 @@ The system SHALL persist merchant company or store ownership on the targeted mer
 #### Scenario: Checkout data carries the same merchant context
 - **WHEN** a tenant-aware checkout operation creates or updates a targeted checkout record in the first slice
 - **THEN** the resulting record stores the merchant company or store ownership associated with the request context
+
+## Notes
+
+### Verification inventory for task 5.1
+
+- Merchant onboarding routing and slug-resolution coverage is exercised in `login-microservice`, `api-gateway-microservice`, and `react-ui` so canonical tenant paths and unknown-tenant outcomes remain observable.
+- Tenant-context propagation coverage is exercised in `products-microservice`, `api-gateway-microservice`, and `react-ui`, including the public gateway lookup and the downstream headers used on the targeted request path.
+- Ownership persistence coverage is exercised in `login-microservice`, `checkout-microservice`, and `cart-microservice` so the first-slice tenant foundation is validated at the records that now carry merchant ownership metadata.
+- Missing-context rejection coverage is exercised in `cart-microservice`, `api-gateway-microservice`, and `react-ui` so tenant-owned flows fail explicitly instead of silently falling back to the shared demo context.
