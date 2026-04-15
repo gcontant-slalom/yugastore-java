@@ -25,6 +25,15 @@
 - For `react-ui`, keep frontend changes inside `react-ui/frontend` and verify the related frontend build path if the UI is modified.
 - If a change depends on a running YugabyteDB instance or multiple services, say so clearly instead of claiming full verification.
 
+## Regression Workflow
+
+- When a supported end-to-end regression command exists for the touched flow or covered module, run the relevant documented regression scope before considering the work complete.
+- Prefer the narrowest supported regression scope that still covers the changed behavior, and use the broader supported scope for cross-service or user-journey changes.
+- If the relevant regression scope cannot run, report exactly what was blocked, what did run, and why the remaining verification could not be completed. Do not imply the regression suite passed when it did not run.
+- Do not relax, remove, or materially repurpose an existing regression test unless the user or the backing issue explicitly authorizes that change.
+- Any change to an existing regression test must explain whether the product behavior changed, the previous test was incorrect, or the test needed to be re-scoped for a documented reason.
+- Do not narrow regression assertions just to make a failing test pass; preserve or strengthen coverage when practical.
+
 ## Workflow Patterns
 
 - Read the affected module before editing; do not assume patterns from a different service apply here.
