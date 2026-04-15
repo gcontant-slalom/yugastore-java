@@ -46,6 +46,10 @@ The transcript also states that a salesperson should be able to send a link to a
   I want to open a company signup link and register my store
   So that I can start selling through the platform.
 
+- As a merchant representative
+  I want the onboarding success confirmation to reflect only my latest successful submission
+  So that I do not mistake a stale banner for a newly created tenant.
+
 - As a shopper
   I want the browser route to identify which store I am browsing
   So that I see the correct tenant-specific catalog.
@@ -62,6 +66,8 @@ The transcript also states that a salesperson should be able to send a link to a
 - The system must create a unique tenant context for each onboarded merchant company or store.
 - Merchant company or store identity must be modeled separately from shopper identity.
 - The system must provide a merchant-facing onboarding route that is distinct from the shopper storefront route.
+- The system must show the merchant-tenant-created confirmation only for the successful onboarding flow that just completed.
+- The system must clear merchant onboarding success state when the user leaves the onboarding page, reloads it, or later returns without submitting the form again.
 - The system must resolve tenant context from a local-demo-friendly browser path.
 - Requests that include a supported tenant route must resolve the corresponding tenant context for downstream flows.
 
@@ -94,6 +100,7 @@ The transcript also states that a salesperson should be able to send a link to a
 
 - If merchant identity and shopper identity are not separated cleanly, later role and ownership rules will be difficult to add.
 - If tenant resolution is inconsistent between browser routing and downstream services, data ownership errors will follow.
+- If onboarding success UI is allowed to persist across page exits or reloads, merchants can misread stale client state as a newly completed tenant-creation event.
 
 ## Dependencies
 
@@ -119,5 +126,6 @@ The transcript also states that a salesperson should be able to send a link to a
 
 - An internal team member can share a merchant signup link.
 - A merchant can create a company or store and receive a tenant context.
+- A merchant who leaves the onboarding page and later returns does not see an old success confirmation unless a new tenant-creation submission has just succeeded.
 - The browser route can switch between at least two tenants in a local demo.
 - Tenant context is resolved consistently for tenant-aware requests.

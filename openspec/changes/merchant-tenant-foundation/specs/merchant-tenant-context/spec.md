@@ -17,6 +17,23 @@ The system SHALL expose a merchant company signup entry point at a tenant-specif
 - **WHEN** a merchant submits a signup request with a slug that is invalid or already assigned to another tenant
 - **THEN** the system rejects the signup request with a clear invalid-slug or duplicate-slug outcome
 
+### Requirement: Merchant onboarding success state is transient
+The system SHALL show merchant onboarding success confirmation only for the successful tenant-creation flow that just completed.
+
+#### Scenario: Successful signup shows current-flow confirmation
+- **WHEN** a merchant successfully creates a tenant from the onboarding form
+- **THEN** the onboarding experience shows a success confirmation for that completed submission
+- **AND** the confirmation identifies the created tenant in the current flow
+
+#### Scenario: Success confirmation clears after leaving and returning
+- **WHEN** a merchant sees the onboarding success confirmation and then leaves the onboarding page or returns to it later without submitting the form again
+- **THEN** the old success confirmation is not shown on the returned onboarding page
+- **AND** the page presents a clean onboarding form state plus any durable tenant data the product intentionally exposes
+
+#### Scenario: Success confirmation does not survive a fresh page load
+- **WHEN** a merchant reloads the onboarding page after a previously successful tenant creation without performing another submit
+- **THEN** the old success confirmation is not restored from client-side persisted state
+
 ### Requirement: Merchant company or store identity is distinct from shopper identity
 The system SHALL represent merchant company or store ownership separately from shopper identity for the initial white-label foundation.
 

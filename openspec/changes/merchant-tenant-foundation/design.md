@@ -70,6 +70,14 @@ Recommended decision: require tenant slugs to be unique, lowercase, browser-safe
 - Alternative considered: generate opaque tenant ids internally and let friendly slugs be optional.
 - Rejected for now because the first slice needs a human-readable URL that can be shared directly.
 
+### 4c. Keep onboarding success confirmation transient to the completed submit flow
+
+Recommended decision: show the merchant-tenant-created confirmation only as transient post-submit state and clear it when the user leaves the onboarding page, reloads it, or later returns without a fresh successful submission.
+
+- Why: the confirmation communicates the outcome of a single create-tenant action. If it survives navigation or reload through sticky client state, the onboarding screen misrepresents the current page state and can lead merchants to think a new creation just completed.
+- Alternative considered: persist the last-success banner in local storage, shared application state, or query parameters so the user always sees their most recent result.
+- Rejected because the screen already has a tenant list for historical context, and a stale success banner is a misleading action confirmation rather than durable account data.
+
 ### 5. Resolve tenant context at the gateway boundary using authenticated identity and route context as input
 
 Recommended decision: treat tenant context as a request-scoped contract introduced at or before the API gateway and derived from the authenticated user or merchant association plus the supported tenant route.
@@ -98,6 +106,7 @@ Recommended decision: preserve current demo usability by mapping existing sample
 
 - Add a merchant onboarding route and company or store creation contract for the first slice.
 - Fix the canonical route contract to `/`, `/{tenantSlug}/`, and `/{tenantSlug}/signup`.
+- Ensure the onboarding page loads with a clean form state unless the user has just completed a successful tenant-creation submit in the current flow.
 - Add tenant ownership fields to targeted merchant-owned data structures and seed assets.
 - Map current demo data to a default merchant or store context so existing sample behavior remains testable.
 - Update frontend and gateway routing so a supported path resolves tenant context for local demos.

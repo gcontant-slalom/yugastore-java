@@ -8,6 +8,7 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 
 - [ ] 1.1 Define the canonical merchant signup route at `/{tenantSlug}/signup`, minimum onboarding fields, slug validation rules, and first-slice tenant creation contract.
 - [ ] 1.2 Decide whether the first merchant-admin user is created in the same flow or as an immediate follow-up and document the resulting contract.
+- [ ] 1.3 Define the onboarding success-message lifecycle so tenant-created confirmation is shown only for the current successful submission and clears on route exit, reload, and later return.
 
 ## 2. Tenant Context Contract
 
@@ -30,4 +31,5 @@ This change starts only after `merchant-auth-foundation` delivers a real authent
 ## 5. Verification
 
 - [ ] 5.1 Add focused tests for merchant onboarding routing, tenant-context propagation, and ownership persistence in the touched modules.
-- [ ] 5.2 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.
+- [ ] 5.2 Add focused UI and regression coverage proving the merchant-tenant-created confirmation is absent on reload and after leaving then returning to the onboarding page.
+- [ ] 5.3 Update developer-facing startup or sample-data guidance if the default merchant-context seed changes local verification behavior.
