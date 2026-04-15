@@ -70,6 +70,7 @@
 - Use `openspec init --tools github-copilot` and `openspec update` when refreshing generated guidance.
 - Keep OpenSpec artifacts lightweight: `proposal.md` for why and scope, `specs/` for behavior changes, `design.md` only when decisions need recording, and `tasks.md` for implementation slices.
 - Treat GitHub issues as thin execution wrappers that reference the OpenSpec change and task groups.
+- When an OpenSpec change is fully implemented and verified, use the `close-openspec-change` skill to archive the change and atomically clean up all related GitHub issues.
 
 ## Local Environment Notes
 
