@@ -10,16 +10,29 @@ import './index.css';
 class ShowProduct extends Component {
   state = {product_id: "", product: undefined, productAlsoBought: []}
 
+  getProductIdFromRoute = (props = this.props) => {
+    return props.match.params.asin || props.match.params.id;
+  }
+
   componentDidMount() {
-    var new_product_id = this.props.match.params.id;
+    var new_product_id = this.getProductIdFromRoute();
     this.fetchProductDetails(new_product_id)
+  }
+
+  componentDidUpdate(prevProps) {
+    const previousProductId = this.getProductIdFromRoute(prevProps);
+    const nextProductId = this.getProductIdFromRoute();
+
+    if (previousProductId !== nextProductId) {
+      this.fetchProductDetails(nextProductId);
+    }
   }
 
   fetchProductDetails = (new_product_id) => {
     if (new_product_id !== undefined &&
         this.state.product_id !== undefined &&
         new_product_id !== this.state.product_id) {
-      this.setState({ product_id: '' + new_product_id });
+      this.setState({ product_id: '' + new_product_id, product: undefined, productAlsoBought: [] });
       var url = '/products/details?asin=' + new_product_id;
       console.log("Fetching url: " + url);
       fetch(url)
@@ -46,8 +59,6 @@ class ShowProduct extends Component {
   }
 
   render () {
-    var new_product_id = this.props.match.params.id;
-    this.fetchProductDetails(new_product_id)
     const currentProduct = this.state.product;
     if (!currentProduct) {
       return ("");      
