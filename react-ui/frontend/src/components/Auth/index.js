@@ -66,7 +66,7 @@ class Auth extends Component {
               : 'Use your email address and password to access protected cart and checkout flows.'}
           </p>
           <div className="auth-switch auth-switch-top">
-            <span>Merchant onboarding happens after sign-in through <Link to="/merchant/signup">Merchant Setup</Link></span>
+            <span>Merchant onboarding happens after sign-in through a shared tenant signup path such as /northwind-books/signup.</span>
           </div>
           {authMessage && <div className="auth-message">{authMessage}</div>}
           <form className="auth-form" onSubmit={this.submit}>

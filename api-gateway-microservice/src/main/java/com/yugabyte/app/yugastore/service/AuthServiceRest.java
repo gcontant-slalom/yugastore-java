@@ -24,5 +24,7 @@ public interface AuthServiceRest {
 
     List<MerchantSignupResponse> currentMerchantContexts(String authenticatedUserId);
 
+    MerchantSignupResponse merchantContextForTenantKey(String tenantKey);
+
     void logout();
 }

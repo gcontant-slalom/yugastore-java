@@ -61,7 +61,9 @@ class Navbar extends Component {
       <div className='nav-auth'>
         {currentUser ? (
           <div className="nav-auth-state">
-            <NavLink className="nav-auth-link" to="/merchant/signup">Merchant Setup</NavLink>
+            {this.props.merchantContext && this.props.merchantContext.tenantKey && (
+              <span className="nav-auth-user">/{this.props.merchantContext.tenantKey}/signup</span>
+            )}
             <span className="nav-auth-user">{currentUser.email}</span>
             <button className="nav-auth-action" onClick={this.props.onLogout}>Logout</button>
           </div>

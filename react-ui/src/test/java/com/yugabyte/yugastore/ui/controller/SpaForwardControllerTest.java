@@ -24,4 +24,18 @@ class SpaForwardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/index.html"));
     }
+
+    @Test
+    void forwardTenantStorefrontRouteToIndexHtml() throws Exception {
+        mockMvc.perform(get("/northwind-books"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/index.html"));
+    }
+
+    @Test
+    void forwardTenantSignupRouteToIndexHtml() throws Exception {
+        mockMvc.perform(get("/northwind-books/signup"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/index.html"));
+    }
 }

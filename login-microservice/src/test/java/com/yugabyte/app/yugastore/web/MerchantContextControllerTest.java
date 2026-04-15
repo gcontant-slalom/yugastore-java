@@ -64,4 +64,19 @@ class MerchantContextControllerTest {
                 .andExpect(jsonPath("$[0].tenantKey").value("northwind-books"))
                 .andExpect(jsonPath("$[1].tenantKey").value("northwind-music"));
     }
+
+    @Test
+    void getMerchantContextForTenantKey_returnsPersistedTenantContext() throws Exception {
+        MerchantSignupResponse response = new MerchantSignupResponse();
+        response.setTenantId("8");
+        response.setTenantKey("northwind-books");
+        response.setCompanyName("Northwind Books");
+        response.setMerchantAdminUserId("42");
+
+        when(merchantContextService.getMerchantContextForTenantKey("northwind-books")).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/merchant-context/tenant/northwind-books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tenantKey").value("northwind-books"));
+    }
 }

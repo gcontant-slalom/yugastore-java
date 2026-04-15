@@ -4,6 +4,7 @@ import com.yugabyte.app.yugastore.service.MerchantContextService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +36,17 @@ public class MerchantContextController {
         try {
             List<MerchantSignupResponse> responses = merchantContextService.getMerchantContexts(userId);
             return ResponseEntity.ok(responses);
+        } catch (ResponseStatusException ex) {
+            AuthErrorResponse errorResponse = new AuthErrorResponse();
+            errorResponse.setMessage(ex.getReason());
+            return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/tenant/{tenantKey}")
+    public ResponseEntity<?> getMerchantContextForTenantKey(@PathVariable("tenantKey") String tenantKey) {
+        try {
+            return ResponseEntity.ok(merchantContextService.getMerchantContextForTenantKey(tenantKey));
         } catch (ResponseStatusException ex) {
             AuthErrorResponse errorResponse = new AuthErrorResponse();
             errorResponse.setMessage(ex.getReason());

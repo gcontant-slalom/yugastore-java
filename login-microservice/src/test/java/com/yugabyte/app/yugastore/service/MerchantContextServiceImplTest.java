@@ -87,4 +87,27 @@ class MerchantContextServiceImplTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("No merchant tenant is linked to this account.");
     }
+
+    @Test
+    void getMerchantContextForTenantKey_returnsPersistedTenantForStorefrontPath() {
+        MerchantTenant tenant = new MerchantTenant();
+        tenant.setId(8L);
+        tenant.setDisplayName("Northwind Books");
+        tenant.setTenantKey("northwind-books");
+        tenant.setCreatedByUserId(42L);
+
+        when(merchantTenantRepository.findByTenantKey("northwind-books")).thenReturn(Optional.of(tenant));
+
+        assertThat(service.getMerchantContextForTenantKey("Northwind-Books").getCompanyName())
+                .isEqualTo("Northwind Books");
+    }
+
+    @Test
+    void getMerchantContextForTenantKey_returnsNotFoundWhenStorefrontPathIsUnknown() {
+        when(merchantTenantRepository.findByTenantKey("unknown-store")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getMerchantContextForTenantKey("unknown-store"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("No merchant tenant matches that storefront path.");
+    }
 }

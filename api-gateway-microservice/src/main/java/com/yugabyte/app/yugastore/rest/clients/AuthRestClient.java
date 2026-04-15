@@ -8,6 +8,7 @@ import com.yugabyte.app.yugastore.domain.MerchantSignupResponse;
 import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,4 +30,7 @@ public interface AuthRestClient {
 
     @GetMapping(value = "/api/v1/merchant-context/list")
     List<MerchantSignupResponse> getMerchantContexts(@RequestParam("userId") String userId);
+
+    @GetMapping(value = "/api/v1/merchant-context/tenant/{tenantKey}")
+    MerchantSignupResponse getMerchantContextForTenantKey(@PathVariable("tenantKey") String tenantKey);
 }

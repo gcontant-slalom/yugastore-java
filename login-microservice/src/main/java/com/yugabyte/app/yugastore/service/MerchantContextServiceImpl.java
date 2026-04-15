@@ -7,6 +7,7 @@ import com.yugabyte.app.yugastore.repo.MerchantTenantRepository;
 import com.yugabyte.app.yugastore.web.MerchantSignupResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,12 +41,26 @@ public class MerchantContextServiceImpl implements MerchantContextService {
 
         List<MerchantSignupResponse> merchantContexts = new ArrayList<>();
         for (MerchantMembership membership : memberships) {
-            MerchantTenant tenant = merchantTenantRepository.findById(membership.getMerchantTenantId())
+            Long merchantTenantId = membership.getMerchantTenantId();
+            if (merchantTenantId == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Merchant tenant record was not found.");
+            }
+
+            MerchantTenant tenant = merchantTenantRepository.findById(merchantTenantId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Merchant tenant record was not found."));
             merchantContexts.add(MerchantSignupResponse.from(tenant, userId));
         }
         return merchantContexts;
+    }
+
+    @Override
+    public MerchantSignupResponse getMerchantContextForTenantKey(String tenantKey) {
+        String normalizedTenantKey = normalizeTenantKey(tenantKey);
+        MerchantTenant tenant = merchantTenantRepository.findByTenantKey(normalizedTenantKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No merchant tenant matches that storefront path."));
+        return MerchantSignupResponse.from(tenant, tenant.getCreatedByUserId());
     }
 
     private Long parseAuthenticatedUserId(String authenticatedUserId) {
@@ -57,5 +72,18 @@ public class MerchantContextServiceImpl implements MerchantContextService {
         } catch (NumberFormatException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authenticated user id is invalid.");
         }
+    }
+
+    private String normalizeTenantKey(String tenantKey) {
+        if (tenantKey == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant key is required.");
+        }
+
+        String normalized = tenantKey.trim().toLowerCase(Locale.ROOT);
+        if (normalized.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant key is required.");
+        }
+
+        return normalized;
     }
 }

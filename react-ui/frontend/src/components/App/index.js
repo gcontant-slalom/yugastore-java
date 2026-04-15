@@ -8,11 +8,11 @@ import Home from '../Home';
 import Auth from '../Auth';
 import MerchantSignup from '../MerchantSignup';
 import { Navbar, Footer, Subscribe } from '../Main/components';
-import { Route, Switch } from 'react-router-dom';
+import { Link, Route, Switch, withRouter } from 'react-router-dom';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
-export default class App extends Component {
+export class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -23,6 +23,10 @@ export default class App extends Component {
       currentUser: null,
       merchantContexts: [],
       merchantContext: null,
+      merchantSignupResult: null,
+      activeTenantContext: null,
+      tenantLookupPending: false,
+      tenantLookupMessage: '',
       authLoaded: false,
       authPending: false,
       authMessage: '',
@@ -39,6 +43,16 @@ export default class App extends Component {
 
   componentDidMount() {
     this.fetchCurrentUser();
+    this.resolveTenantStorefront();
+  }
+
+  componentDidUpdate(prevProps) {
+    const previousPathname = prevProps.location ? prevProps.location.pathname : '';
+    const nextPathname = this.props.location ? this.props.location.pathname : '';
+
+    if (previousPathname !== nextPathname) {
+      this.resolveTenantStorefront();
+    }
   }
 
   componentWillMount() {
@@ -84,6 +98,52 @@ export default class App extends Component {
     });
   }
 
+  getTenantSlugFromLocation = (location = this.props.location) => {
+    const pathname = location && location.pathname ? location.pathname : '';
+    const match = pathname.match(/^\/([a-z0-9-]+)\/?$/);
+    if (!match) {
+      return null;
+    }
+
+    const tenantSlug = match[1];
+    const reservedPaths = new Set(['login', 'register', 'cart', 'sort', 'item', 'merchant', 'auth', 'api']);
+
+    return reservedPaths.has(tenantSlug) ? null : tenantSlug;
+  }
+
+  resolveTenantStorefront = () => {
+    const tenantSlug = this.getTenantSlugFromLocation();
+
+    if (!tenantSlug) {
+      if (this.state.activeTenantContext || this.state.tenantLookupPending || this.state.tenantLookupMessage) {
+        this.setState({ activeTenantContext: null, tenantLookupPending: false, tenantLookupMessage: '' });
+      }
+      return Promise.resolve(null);
+    }
+
+    if (this.state.activeTenantContext
+        && this.state.activeTenantContext.tenantKey === tenantSlug
+        && !this.state.tenantLookupPending
+        && !this.state.tenantLookupMessage) {
+      return Promise.resolve(this.state.activeTenantContext);
+    }
+
+    this.setState({ activeTenantContext: null, tenantLookupPending: true, tenantLookupMessage: '' });
+    return this.requestJson(`/api/v1/merchant-context/tenant/${tenantSlug}`, { method: 'GET' })
+      .then(activeTenantContext => {
+        this.setState({ activeTenantContext, tenantLookupPending: false, tenantLookupMessage: '' });
+        return activeTenantContext;
+      })
+      .catch(error => {
+        this.setState({
+          activeTenantContext: null,
+          tenantLookupPending: false,
+          tenantLookupMessage: error.message || 'No merchant tenant matches that storefront path.'
+        });
+        return null;
+      });
+  }
+
   fetchCurrentUser = () => {
     return this.requestJson('/auth/current-user', { method: 'GET' })
       .then(currentUser => {
@@ -96,6 +156,7 @@ export default class App extends Component {
             currentUser: null,
             merchantContexts: [],
             merchantContext: null,
+            merchantSignupResult: null,
             authLoaded: true,
             authPending: false,
             authMessage: '',
@@ -252,7 +313,13 @@ export default class App extends Component {
       body: JSON.stringify(credentials)
     })
       .then(currentUser => {
-        this.setState({ currentUser, authPending: false, authMessage: '', merchantSignupMessage: '' });
+        this.setState({
+          currentUser,
+          authPending: false,
+          authMessage: '',
+          merchantSignupMessage: '',
+          merchantSignupResult: null
+        });
         return Promise.all([this.fetchCart(), this.fetchMerchantContexts()]);
       })
       .catch(error => {
@@ -268,7 +335,13 @@ export default class App extends Component {
       body: JSON.stringify(payload)
     })
       .then(currentUser => {
-        this.setState({ currentUser, authPending: false, authMessage: '', merchantSignupMessage: '' });
+        this.setState({
+          currentUser,
+          authPending: false,
+          authMessage: '',
+          merchantSignupMessage: '',
+          merchantSignupResult: null
+        });
         return Promise.all([this.fetchCart(), this.fetchMerchantContexts()]);
       })
       .catch(error => {
@@ -289,6 +362,7 @@ export default class App extends Component {
           currentUser: null,
           merchantContexts: [],
           merchantContext: null,
+          merchantSignupResult: null,
           authPending: false,
           authMessage: '',
           merchantSignupPending: false,
@@ -304,7 +378,7 @@ export default class App extends Component {
       return Promise.resolve(null);
     }
 
-    this.setState({ merchantSignupPending: true, merchantSignupMessage: '' });
+    this.setState({ merchantSignupPending: true, merchantSignupMessage: '', merchantSignupResult: null });
     return this.requestJson('/api/v1/merchant-signup', {
       method: 'POST',
       body: JSON.stringify(payload)
@@ -313,15 +387,44 @@ export default class App extends Component {
         this.setState(prevState => ({
           merchantContexts: [...prevState.merchantContexts, merchantContext],
           merchantContext,
+          merchantSignupResult: merchantContext,
           merchantSignupPending: false,
           merchantSignupMessage: ''
         }));
         return merchantContext;
       })
       .catch(error => {
-        this.setState({ merchantSignupPending: false, merchantSignupMessage: error.message });
+        this.setState({ merchantSignupPending: false, merchantSignupMessage: error.message, merchantSignupResult: null });
         return null;
       });
+  }
+
+  clearMerchantSignupFeedback = () => {
+    this.setState({ merchantSignupMessage: '', merchantSignupResult: null });
+  }
+
+  renderTenantStorefront = () => {
+    const tenantSlug = this.getTenantSlugFromLocation();
+
+    if (this.state.tenantLookupPending) {
+      return <div className="tenant-route-status">Loading storefront for /{tenantSlug}...</div>;
+    }
+
+    if (this.state.tenantLookupMessage) {
+      return (
+        <div className="tenant-route-status tenant-route-status-error">
+          <h1>Unknown tenant storefront</h1>
+          <p>{this.state.tenantLookupMessage}</p>
+          <p>The shared demo storefront is still available at <Link to="/">/</Link>.</p>
+        </div>
+      );
+    }
+
+    if (!this.state.activeTenantContext) {
+      return null;
+    }
+
+    return <Home addItemToCart={this.addItemToCart} tenantContext={this.state.activeTenantContext} />;
   }
 
   render() {
@@ -331,6 +434,7 @@ export default class App extends Component {
           scrolled={this.state.scrolled}
           cart={this.state.cart}
           currentUser={this.state.currentUser}
+          merchantContext={this.state.merchantContext}
           onLogout={this.logout} />
 
         <Switch>
@@ -353,7 +457,7 @@ export default class App extends Component {
                 authMessage={this.state.authMessage}
                 onRegister={this.register} />
             )} />
-          <Route path="/merchant/signup"
+          <Route exact sensitive path="/:tenantSlug([a-z0-9-]+)/signup"
             render={(props) => (
               <MerchantSignup
                 {...props}
@@ -362,6 +466,8 @@ export default class App extends Component {
                 message={this.state.merchantSignupMessage}
                 merchantContexts={this.state.merchantContexts}
                 merchantContext={this.state.merchantContext}
+                merchantSignupResult={this.state.merchantSignupResult}
+                onClearFeedback={this.clearMerchantSignupFeedback}
                 onSubmit={this.createMerchantSignup} />
             )} />
           <Route path="/cart" render={() => (
@@ -373,6 +479,7 @@ export default class App extends Component {
           )} />
           <Route path="/item/:asin" render={(props) => <ShowProduct {...props} addItemToCart={this.addItemToCart} />} />
           <Route path="/sort/:sort" render={(props) => <Products {...props} sort={props.match.params.sort} addItemToCart={this.addItemToCart} />} />
+          <Route exact sensitive path="/:tenantSlug([a-z0-9-]+)" render={this.renderTenantStorefront} />
           <Route exact path="/:category(Books|Music|Beauty|Electronics)" render={(props) => <Products {...props} category={props.match.params.category} addItemToCart={this.addItemToCart} />} />
           <Route path="/:category" render={(props) => <Products {...props} addItemToCart={this.addItemToCart} />} />
         </Switch>
@@ -382,3 +489,5 @@ export default class App extends Component {
     );
   }
 }
+
+export default withRouter(App);

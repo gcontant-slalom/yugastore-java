@@ -8,9 +8,28 @@ class MerchantSignup extends Component {
     super(props);
     this.state = {
       companyName: '',
-      tenantKey: '',
+      tenantKey: this.getTenantKeyFromProps(props),
       formError: ''
     };
+  }
+
+  componentDidUpdate(prevProps) {
+    const previousTenantKey = this.getTenantKeyFromProps(prevProps);
+    const nextTenantKey = this.getTenantKeyFromProps(this.props);
+
+    if (previousTenantKey !== nextTenantKey) {
+      this.setState({ tenantKey: nextTenantKey, formError: '' });
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.props.onClearFeedback) {
+      this.props.onClearFeedback();
+    }
+  }
+
+  getTenantKeyFromProps = props => {
+    return (props.match && props.match.params && props.match.params.tenantSlug) || '';
   }
 
   handleChange = event => {
@@ -35,7 +54,7 @@ class MerchantSignup extends Component {
   }
 
   renderSuccess() {
-    const merchantContext = this.props.merchantContext;
+    const merchantContext = this.props.merchantSignupResult;
     if (!merchantContext) {
       return null;
     }
@@ -90,7 +109,7 @@ class MerchantSignup extends Component {
           <form className="auth-form" onSubmit={this.submit}>
             <label>Company or store name</label>
             <input name="companyName" type="text" value={this.state.companyName} onChange={this.handleChange} />
-            <label>Tenant key</label>
+            <label>Tenant slug</label>
             <input name="tenantKey" type="text" value={this.state.tenantKey} onChange={this.handleChange} />
             <Button color="primary" size="large" className="auth-submit" disabled={this.props.pending || !this.props.currentUser}>
               {this.props.pending ? 'Creating tenant...' : 'Create merchant tenant'}

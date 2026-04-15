@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
 import { MemoryRouter } from 'react-router-dom';
-import App from './index';
+import WrappedApp, { App } from './index';
 
 jest.mock('../Cart', () => props => (
   <div>
@@ -23,7 +23,7 @@ jest.mock('../Products', () => props => (
 ));
 jest.mock('../Home', () => props => (
   <div>
-    <div>home-page</div>
+    <div>home-page-{props.tenantContext ? props.tenantContext.tenantKey : 'demo'}</div>
     <button className="home-add" onClick={() => props.addItemToCart({ id: { asin: 'sku-1' }, title: 'Home Item' })}>add-home</button>
   </div>
 ));
@@ -73,7 +73,7 @@ describe('App', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/"]}>
-          <App />
+          <WrappedApp />
         </MemoryRouter>,
         container
       );
@@ -105,6 +105,7 @@ describe('App', () => {
 
     expect(app.state.merchantContexts).toHaveLength(2);
     expect(app.state.merchantContext).toEqual({ tenantId: '9', tenantKey: 'northwind-music', companyName: 'Northwind Music' });
+    expect(app.state.merchantSignupResult).toBeNull();
   });
 
   it('rehydrates merchant context after login', async () => {
@@ -150,7 +151,7 @@ describe('App', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/cart"]}>
-          <App />
+          <WrappedApp />
         </MemoryRouter>,
         container
       );
@@ -174,7 +175,7 @@ describe('App', () => {
       await act(async () => {
         ReactDOM.render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <WrappedApp />
           </MemoryRouter>,
           container
         );
@@ -198,7 +199,7 @@ describe('App', () => {
       await act(async () => {
         ReactDOM.render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <WrappedApp />
           </MemoryRouter>,
           container
         );
@@ -217,7 +218,7 @@ describe('App', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/"]}>
-          <App />
+          <WrappedApp />
         </MemoryRouter>,
         container
       );
@@ -242,7 +243,7 @@ describe('App', () => {
     await act(async () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/cart"]}>
-          <App />
+          <WrappedApp />
         </MemoryRouter>,
         container
       );
@@ -280,6 +281,88 @@ describe('App', () => {
 
     expect(app.state.merchantContexts).toHaveLength(2);
     expect(app.state.merchantContext.tenantKey).toBe('northwind-music');
+    expect(app.state.merchantSignupResult.tenantKey).toBe('northwind-music');
+  });
+
+  it('clears transient merchant signup feedback when the onboarding route is left', () => {
+    const app = new App({});
+    app.state.merchantSignupMessage = 'Created';
+    app.state.merchantSignupResult = { tenantKey: 'northwind-music' };
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    app.clearMerchantSignupFeedback();
+
+    expect(app.state.merchantSignupMessage).toBe('');
+    expect(app.state.merchantSignupResult).toBeNull();
+  });
+
+  it('renders the tenant-scoped merchant signup route', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/northwind-books/signup']}>
+          <WrappedApp />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Create your merchant tenant');
+    expect(container.querySelector('input[name="tenantKey"]').value).toBe('northwind-books');
+  });
+
+  it('resolves tenant storefront context from the slug route', async () => {
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ tenantId: '8', tenantKey: 'northwind-books', companyName: 'Northwind Books' }))
+      }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/northwind-books']}>
+          <WrappedApp />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/v1/merchant-context/tenant/northwind-books', expect.objectContaining({ method: 'GET' }));
+    expect(container.textContent).toContain('home-page-northwind-books');
+  });
+
+  it('shows an invalid-tenant outcome instead of falling back to the demo storefront', async () => {
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve('') }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve(JSON.stringify({ message: 'No merchant tenant matches that storefront path.' }))
+      }));
+
+    await act(async () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/unknown-store']}>
+          <WrappedApp />
+        </MemoryRouter>,
+        container
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Unknown tenant storefront');
+    expect(container.textContent).not.toContain('home-page-demo');
   });
 
   it('sets and clears the cart error flag when add to cart fails', async () => {
@@ -354,7 +437,7 @@ describe('App', () => {
       await act(async () => {
         ReactDOM.render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <WrappedApp />
           </MemoryRouter>,
           container
         );

@@ -15,8 +15,17 @@ class Home extends Component {
   }
 
   render() {
+    const tenantContext = this.props.tenantContext;
+
     return (
       <div>
+        {tenantContext && (
+          <div className="tenant-storefront-banner">
+            <div className="tenant-storefront-eyebrow">Tenant Storefront</div>
+            <h1>{tenantContext.companyName}</h1>
+            <p>Browsing storefront /{tenantContext.tenantKey}</p>
+          </div>
+        )}
         <Hero/>
         <div className="paragraph">
           <Products addItemToCart={this.props.addItemToCart} isInline={true} name={<span>Bestsellers in <Link to={"/Books"}>Books</Link></span>} category="Books" limit={4}/>

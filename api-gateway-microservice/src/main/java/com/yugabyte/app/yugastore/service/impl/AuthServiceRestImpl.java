@@ -107,6 +107,15 @@ public class AuthServiceRestImpl implements AuthServiceRest {
     }
 
     @Override
+    public MerchantSignupResponse merchantContextForTenantKey(String tenantKey) {
+        try {
+            return authRestClient.getMerchantContextForTenantKey(tenantKey);
+        } catch (FeignException ex) {
+            throw translateException(ex, HttpStatus.NOT_FOUND, "No merchant tenant matches that storefront path.");
+        }
+    }
+
+    @Override
     public void logout() {
         currentUser = null;
     }

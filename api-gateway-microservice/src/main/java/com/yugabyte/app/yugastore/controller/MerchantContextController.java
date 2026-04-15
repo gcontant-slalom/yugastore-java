@@ -5,6 +5,7 @@ import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,5 +32,11 @@ public class MerchantContextController {
     public ResponseEntity<List<MerchantSignupResponse>> currentMerchantContexts(
             @RequestHeader(value = AUTH_USER_ID_HEADER, required = false) String authenticatedUserId) {
         return ResponseEntity.ok(authServiceRest.currentMerchantContexts(authenticatedUserId));
+    }
+
+    @GetMapping("/tenant/{tenantKey}")
+    public ResponseEntity<MerchantSignupResponse> merchantContextForTenantKey(
+            @PathVariable("tenantKey") String tenantKey) {
+        return ResponseEntity.ok(authServiceRest.merchantContextForTenantKey(tenantKey));
     }
 }

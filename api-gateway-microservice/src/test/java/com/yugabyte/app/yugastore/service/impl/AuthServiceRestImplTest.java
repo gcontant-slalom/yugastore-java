@@ -128,6 +128,17 @@ class AuthServiceRestImplTest {
     }
 
     @Test
+    void merchantContextForTenantKey_usesPublicTenantLookup() {
+        MerchantSignupResponse response = new MerchantSignupResponse();
+        response.setTenantKey("northwind-books");
+
+        when(authRestClient.getMerchantContextForTenantKey("northwind-books")).thenReturn(response);
+
+        assertThat(service.merchantContextForTenantKey("northwind-books").getTenantKey())
+                .isEqualTo("northwind-books");
+    }
+
+    @Test
     void register_preservesValidationErrorsFromDownstreamService() {
         AuthRegistrationRequest request = new AuthRegistrationRequest();
         request.setEmail("merchant@example.com");
