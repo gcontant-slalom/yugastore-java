@@ -33,7 +33,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
       .and()
       .authorizeRequests()
       .antMatchers("/resources/**", "/registration", "/api/v1/auth/register", "/api/v1/auth/login",
-        "/api/v1/auth/logout")
+        "/api/v1/auth/logout", "/api/v1/merchant-signup", "/api/v1/merchant-context",
+        "/api/v1/merchant-context/list")
       .permitAll()
       .anyRequest()
       .authenticated()

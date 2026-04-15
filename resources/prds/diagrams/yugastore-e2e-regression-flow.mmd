@@ -1,0 +1,32 @@
+flowchart LR
+    dev[Developer or Copilot session]
+    suite[End-to-end regression suite]
+    setup[Environment bootstrap and data reset]
+    ui[react-ui]
+    gateway[api-gateway-microservice]
+    login[login-microservice]
+    products[products-microservice]
+    cart[cart-microservice]
+    checkout[checkout-microservice]
+    eureka[eureka-server-local]
+    yb[(YugabyteDB\nYCQL and YSQL)]
+    report[Regression report and failure artifacts]
+    policy[Copilot workflow policy\nrun suite and justify test changes]
+
+    dev --> suite
+    dev --> policy
+    suite --> setup
+    setup --> eureka
+    setup --> yb
+    suite --> ui
+    ui --> gateway
+    gateway --> login
+    gateway --> products
+    gateway --> cart
+    gateway --> checkout
+    products --> yb
+    cart --> yb
+    checkout --> yb
+    login --> yb
+    suite --> report
+    policy --> suite

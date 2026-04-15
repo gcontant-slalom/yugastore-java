@@ -59,12 +59,15 @@ class Auth extends Component {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-eyebrow">Merchant Access</div>
+          <div className="auth-eyebrow">Account Access</div>
           <h1>{isRegister ? 'Create your account' : 'Sign in to continue'}</h1>
           <p className="auth-subtitle">
             {isRegister ? 'Register with your email address to start managing your cart and checkout.'
               : 'Use your email address and password to access protected cart and checkout flows.'}
           </p>
+          <div className="auth-switch auth-switch-top">
+            <span>Merchant onboarding happens after sign-in through <Link to="/merchant/signup">Merchant Setup</Link></span>
+          </div>
           {authMessage && <div className="auth-message">{authMessage}</div>}
           <form className="auth-form" onSubmit={this.submit}>
             <label>Email</label>

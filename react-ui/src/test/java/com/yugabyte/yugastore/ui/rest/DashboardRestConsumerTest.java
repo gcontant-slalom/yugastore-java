@@ -2,6 +2,7 @@ package com.yugabyte.yugastore.ui.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -68,6 +69,56 @@ class DashboardRestConsumerTest {
 		String response = dashboardRestConsumer.getProductDetails("MISSING");
 
 		assertThat(response).isEqualTo("{}");
+	}
+	
+	void createMerchantSignup_targetsGatewayMerchantSignupRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/merchant-signup"))
+				.andExpect(method(HttpMethod.POST))
+				.andExpect(content().json("{\"companyName\":\"Northwind Books\",\"tenantKey\":\"northwind-books\"}"))
+				.andRespond(withStatus(HttpStatus.CREATED)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"tenantId\":\"8\",\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\",\"merchantAdminUserId\":\"42\"}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.createMerchantSignup(
+				"{\"companyName\":\"Northwind Books\",\"tenantKey\":\"northwind-books\"}");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+		assertThat(response.getBody()).contains("northwind-books");
+
+		server.verify();
+	}
+
+	@Test
+	void getMerchantContext_targetsGatewayMerchantContextRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/merchant-context"))
+				.andExpect(method(HttpMethod.GET))
+				.andExpect(header(DashboardRestConsumer.AUTH_USER_ID_HEADER, "42"))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("{\"tenantId\":\"8\",\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\",\"merchantAdminUserId\":\"42\"}"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.getMerchantContext("42");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("northwind-books");
+
+		server.verify();
+	}
+
+	@Test
+	void getMerchantContexts_targetsGatewayMerchantContextListRoute() {
+		server.expect(requestTo("http://localhost:8081/api/v1/merchant-context/list"))
+				.andExpect(method(HttpMethod.GET))
+				.andExpect(header(DashboardRestConsumer.AUTH_USER_ID_HEADER, "42"))
+				.andRespond(withStatus(HttpStatus.OK)
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("[{\"tenantId\":\"8\",\"tenantKey\":\"northwind-books\",\"companyName\":\"Northwind Books\",\"merchantAdminUserId\":\"42\"}]"));
+
+		ResponseEntity<String> response = dashboardRestConsumer.getMerchantContexts("42");
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("northwind-books");
+
 		server.verify();
 	}
 }
