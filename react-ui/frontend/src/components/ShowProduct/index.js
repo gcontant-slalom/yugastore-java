@@ -67,11 +67,6 @@ class ShowProduct extends Component {
   }
 
   render () {
-<<<<<<< HEAD
-    var new_product_id = this.routeProductId();
-    this.fetchProductDetails(new_product_id)
-=======
->>>>>>> 3972fedbe9b4d8d1ba7a4da6feabb5577aa4a7c2
     const currentProduct = this.state.product;
     if (!currentProduct) {
       return ("");      
