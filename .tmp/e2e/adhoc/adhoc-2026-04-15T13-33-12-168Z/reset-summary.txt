@@ -1,0 +1,70 @@
+Yugastore E2E Reset
+Scope: adhoc
+Run ID: adhoc-2026-04-15T13-33-12-168Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/adhoc/adhoc-2026-04-15T13-33-12-168Z
+
+PASS: database-mode - Using local ycqlsh/ysqlsh commands
+FAIL: reset-error - Unable to apply resources/schema.cql
+/Users/slandizier/Documents/projects/yugastore-java/resources/schema.cql:24:InvalidRequest: Error from server: code=2200 [Invalid query] message="Duplicate Object. Object 'cronos.products' already exists
+CREATE TABLE cronos.products (
+                   ^^^^^^^^^
+    asin text PRIMARY KEY,
+    title text,
+    description text,
+    price double,
+    imurl text,
+    also_bought frozen<list<text>>,
+    also_viewed frozen<list<text>>,
+    bought_together frozen<list<text>>,
+    buy_after_viewing frozen<list<text>>,
+    brand text,
+    categories set<text>,
+    num_reviews int,
+    num_stars double,
+    avg_stars double
+) WITH default_time_to_live = 0
+    AND transactions = {'enabled': 'false'};
+ (ql error -202)"
+/Users/slandizier/Documents/projects/yugastore-java/resources/schema.cql:46:InvalidRequest: Error from server: code=2200 [Invalid query] message="Duplicate Object. Object 'cronos.product_rankings' already exists
+CREATE TABLE cronos.product_rankings (
+                   ^^^^^^^^^^^^^^^^^
+    asin text,
+    category text,
+    sales_rank int,
+    title text,
+    price double,
+    imurl text,
+    num_reviews int,
+    num_stars double,
+    avg_stars double,
+    PRIMARY KEY (asin, category)
+) WITH CLUSTERING ORDER BY (category ASC)
+    AND default_time_to_live = 0
+    AND transactions = {'enabled': 'false'};
+ (ql error -202)"
+/Users/slandizier/Documents/projects/yugastore-java/resources/schema.cql:53:InvalidRequest: Error from server: code=2200 [Invalid query] message="Duplicate Object. Object 'cronos.top_products_in_category' already exists
+CREATE INDEX top_products_in_category
+    ON cronos.product_rankings (category, sales_rank)
+         ^^^^^^^^^^^^^^^^^
+    WITH transactions = { 'enabled' : false, 'consistency_level' : 'user_enforced' };
+ (ql error -202)"
+/Users/slandizier/Documents/projects/yugastore-java/resources/schema.cql:64:InvalidRequest: Error from server: code=2200 [Invalid query] message="Duplicate Object. Object 'cronos.orders' already exists
+CREATE TABLE cronos.orders (
+                   ^^^^^^^
+    order_id text PRIMARY KEY,
+    user_id text,
+    order_details text,
+    order_time text,
+    order_total double
+) WITH default_time_to_live = 0
+    AND transactions = {'enabled': 'true'};
+ (ql error -202)"
+/Users/slandizier/Documents/projects/yugastore-java/resources/schema.cql:71:InvalidRequest: Error from server: code=2200 [Invalid query] message="Duplicate Object. Object 'cronos.product_inventory' already exists
+CREATE TABLE cronos.product_inventory (
+                   ^^^^^^^^^^^^^^^^^^
+    asin text PRIMARY KEY,
+    quantity int
+) WITH default_time_to_live = 0
+    AND transactions = {'enabled': 'true'};
+ (ql error -202)"

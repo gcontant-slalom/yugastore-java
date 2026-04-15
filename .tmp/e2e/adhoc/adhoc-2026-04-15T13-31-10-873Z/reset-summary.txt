@@ -1,0 +1,9 @@
+Yugastore E2E Reset
+Scope: adhoc
+Run ID: adhoc-2026-04-15T13-31-10-873Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/adhoc/adhoc-2026-04-15T13-31-10-873Z
+
+PASS: database-mode - Using local ycqlsh/ysqlsh commands
+FAIL: reset-error - Unable to apply resources/schema.cql
+Can't open '-': [Errno 2] No such file or directory: '-'

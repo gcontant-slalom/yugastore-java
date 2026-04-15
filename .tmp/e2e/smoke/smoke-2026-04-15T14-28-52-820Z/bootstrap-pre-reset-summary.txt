@@ -1,0 +1,20 @@
+Yugastore E2E Bootstrap
+Scope: smoke
+Run ID: smoke-2026-04-15T14-28-52-820Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/smoke/smoke-2026-04-15T14-28-52-820Z
+
+FAIL: java-runtime - Java 17+ is required
+PASS: node-runtime - Node v20.19.0 satisfies the minimum required version 18
+PASS: npm-runtime - npm 10.8.2 is available
+PASS: playwright-dependency - @playwright/test is installed in e2e/node_modules
+PASS: service-eureka - Eureka service discovery dashboard is reachable at http://localhost:8761
+PASS: service-api-gateway - API gateway is reachable at http://localhost:8081
+PASS: service-products - Products microservice is reachable at http://localhost:8082
+FAIL: service-cart - Cart microservice is not reachable at http://localhost:8083
+PASS: service-checkout - Checkout microservice is reachable at http://localhost:8086
+PASS: service-react-ui - Spring Boot React UI wrapper is reachable at http://localhost:8080
+PASS: optional-service-login - Login microservice (currently incomplete and excluded from the required regression baseline) is reachable at http://localhost:8085
+
+Notes:
+- Data validation was skipped for the pre-reset bootstrap phase.

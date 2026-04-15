@@ -1,0 +1,15 @@
+{
+  "name": "yugastore-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Root-level end-to-end regression harness for Yugastore",
+  "scripts": {
+    "bootstrap": "node ../scripts/e2e/bootstrap.cjs",
+    "reset": "node ../scripts/e2e/reset.cjs",
+    "smoke": "node ../scripts/e2e/run-scope.cjs smoke",
+    "full": "node ../scripts/e2e/run-scope.cjs full"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.2"
+  }
+}

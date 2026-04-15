@@ -1,0 +1,90 @@
+{
+  "scope": "adhoc",
+  "ok": false,
+  "command": "bootstrap",
+  "summaryName": "bootstrap",
+  "skipDataChecks": false,
+  "steps": [
+    {
+      "name": "java-runtime",
+      "ok": false,
+      "detail": "Java 17+ is required"
+    },
+    {
+      "name": "node-runtime",
+      "ok": true,
+      "detail": "Node v20.19.0 satisfies the minimum required version 18"
+    },
+    {
+      "name": "npm-runtime",
+      "ok": true,
+      "detail": "npm 10.8.2 is available"
+    },
+    {
+      "name": "playwright-dependency",
+      "ok": true,
+      "detail": "@playwright/test is installed in e2e/node_modules"
+    },
+    {
+      "name": "service-eureka",
+      "ok": false,
+      "detail": "Eureka service discovery dashboard is not reachable at http://localhost:8761"
+    },
+    {
+      "name": "service-api-gateway",
+      "ok": false,
+      "detail": "API gateway is not reachable at http://localhost:8081"
+    },
+    {
+      "name": "service-products",
+      "ok": false,
+      "detail": "Products microservice is not reachable at http://localhost:8082"
+    },
+    {
+      "name": "service-cart",
+      "ok": false,
+      "detail": "Cart microservice is not reachable at http://localhost:8083"
+    },
+    {
+      "name": "service-checkout",
+      "ok": false,
+      "detail": "Checkout microservice is not reachable at http://localhost:8086"
+    },
+    {
+      "name": "service-react-ui",
+      "ok": false,
+      "detail": "Spring Boot React UI wrapper is not reachable at http://localhost:8080"
+    },
+    {
+      "name": "optional-service-login",
+      "ok": true,
+      "detail": "Login microservice (currently incomplete and excluded from the required regression baseline) is not running; this is expected for the current supported baseline"
+    },
+    {
+      "name": "database-mode",
+      "ok": true,
+      "detail": "Using local ycqlsh/ysqlsh commands"
+    },
+    {
+      "name": "ycql-products",
+      "ok": false,
+      "detail": "products baseline mismatch: expected 6276, found 0"
+    },
+    {
+      "name": "ycql-product_rankings",
+      "ok": false,
+      "detail": "product_rankings baseline mismatch: expected 6022, found 0"
+    },
+    {
+      "name": "ycql-product_inventory",
+      "ok": false,
+      "detail": "product_inventory baseline mismatch: expected 6276, found 0"
+    },
+    {
+      "name": "ysql-shopping_cart",
+      "ok": true,
+      "detail": "shopping_cart contains 0 rows as expected"
+    }
+  ],
+  "notes": []
+}

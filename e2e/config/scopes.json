@@ -1,0 +1,16 @@
+{
+  "smoke": {
+    "description": "Foundation-only smoke scope. Resets data, validates the baseline, and runs Playwright smoke-tagged specs when they exist.",
+    "playwrightArgs": [
+      "--grep",
+      "@smoke",
+      "--pass-with-no-tests"
+    ]
+  },
+  "full": {
+    "description": "Broader local regression scope. Uses the same bootstrap and reset flow, then runs the full Playwright suite when specs exist.",
+    "playwrightArgs": [
+      "--pass-with-no-tests"
+    ]
+  }
+}

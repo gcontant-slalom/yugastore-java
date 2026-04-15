@@ -1,0 +1,14 @@
+Yugastore E2E Reset
+Scope: adhoc
+Run ID: adhoc-2026-04-15T13-47-38-342Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/adhoc/adhoc-2026-04-15T13-47-38-342Z
+
+PASS: database-mode - Using local ycqlsh/ysqlsh commands
+PASS: apply-ycql-schema - Applied resources/schema.cql with existing-object warnings
+PASS: apply-ysql-schema - Applied resources/schema.sql
+PASS: truncate-ycql-tables - Executed 4 YCQL reset statements
+PASS: truncate-ysql-tables - Executed 1 YSQL reset statements
+FAIL: reset-error - Unable to load resources/cronos_products.csv into products
+/var/folders/n4/dzzrjl1127bb5p4y917b98zm0000gn/T/yugastore-e2e-UsAhvj/seed.cql:2:cannot pickle '_thread.lock' object
+/var/folders/n4/dzzrjl1127bb5p4y917b98zm0000gn/T/yugastore-e2e-UsAhvj/seed.cql:2:'NoneType' object has no attribute 'terminate'

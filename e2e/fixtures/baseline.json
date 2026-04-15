@@ -1,0 +1,64 @@
+{
+  "ycql": {
+    "schemaFile": "resources/schema.cql",
+    "truncateStatements": [
+      "TRUNCATE cronos.orders;",
+      "TRUNCATE cronos.product_inventory;",
+      "TRUNCATE cronos.product_rankings;",
+      "TRUNCATE cronos.products;"
+    ],
+    "seedData": [
+      {
+        "name": "products",
+        "table": "products",
+        "columns": "asin, title, description, price, imurl, also_bought, also_viewed, bought_together, buy_after_viewing, brand, categories, num_reviews, num_stars, avg_stars",
+        "file": "resources/cronos_products.csv",
+        "expectedSourceRowsFromFile": true
+      },
+      {
+        "name": "product_rankings",
+        "table": "product_rankings",
+        "columns": "asin, category, sales_rank, title, price, imurl, num_reviews, num_stars, avg_stars",
+        "file": "resources/cronos_product_rankings.csv",
+        "expectedSourceRowsFromFile": true
+      },
+      {
+        "name": "product_inventory",
+        "table": "product_inventory",
+        "columns": "asin, quantity",
+        "file": "resources/cronos_product_inventory.csv",
+        "expectedSourceRowsFromFile": true
+      }
+    ],
+    "verificationQueries": [
+      {
+        "name": "products",
+        "query": "SELECT count(*) FROM cronos.products;",
+        "sourceFile": "resources/cronos_products.csv"
+      },
+      {
+        "name": "product_rankings",
+        "query": "SELECT count(*) FROM cronos.product_rankings;",
+        "sourceFile": "resources/cronos_product_rankings.csv"
+      },
+      {
+        "name": "product_inventory",
+        "query": "SELECT count(*) FROM cronos.product_inventory;",
+        "sourceFile": "resources/cronos_product_inventory.csv"
+      }
+    ]
+  },
+  "ysql": {
+    "schemaFile": "resources/schema.sql",
+    "resetStatements": [
+      "TRUNCATE TABLE shopping_cart;"
+    ],
+    "verificationQueries": [
+      {
+        "name": "shopping_cart",
+        "query": "SELECT count(*) FROM shopping_cart;",
+        "expectedExactRows": 0
+      }
+    ]
+  }
+}

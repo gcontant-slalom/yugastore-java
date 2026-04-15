@@ -1,0 +1,39 @@
+{
+  "scope": "adhoc",
+  "ok": false,
+  "command": "reset",
+  "summaryName": "reset",
+  "steps": [
+    {
+      "name": "database-mode",
+      "ok": true,
+      "detail": "Using local ycqlsh/ysqlsh commands"
+    },
+    {
+      "name": "apply-ycql-schema",
+      "ok": true,
+      "detail": "Applied resources/schema.cql with existing-object warnings"
+    },
+    {
+      "name": "apply-ysql-schema",
+      "ok": true,
+      "detail": "Applied resources/schema.sql"
+    },
+    {
+      "name": "truncate-ycql-tables",
+      "ok": true,
+      "detail": "Executed 4 YCQL reset statements"
+    },
+    {
+      "name": "truncate-ysql-tables",
+      "ok": true,
+      "detail": "Executed 1 YSQL reset statements"
+    },
+    {
+      "name": "reset-error",
+      "ok": false,
+      "detail": "Unable to load resources/cronos_products.csv into products\n/var/folders/n4/dzzrjl1127bb5p4y917b98zm0000gn/T/yugastore-e2e-UsAhvj/seed.cql:2:cannot pickle '_thread.lock' object\n/var/folders/n4/dzzrjl1127bb5p4y917b98zm0000gn/T/yugastore-e2e-UsAhvj/seed.cql:2:'NoneType' object has no attribute 'terminate'"
+    }
+  ],
+  "notes": []
+}

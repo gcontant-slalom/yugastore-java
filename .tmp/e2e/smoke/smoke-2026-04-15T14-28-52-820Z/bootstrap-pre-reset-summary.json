@@ -1,0 +1,67 @@
+{
+  "scope": "smoke",
+  "ok": false,
+  "command": "bootstrap",
+  "summaryName": "bootstrap-pre-reset",
+  "skipDataChecks": true,
+  "steps": [
+    {
+      "name": "java-runtime",
+      "ok": false,
+      "detail": "Java 17+ is required"
+    },
+    {
+      "name": "node-runtime",
+      "ok": true,
+      "detail": "Node v20.19.0 satisfies the minimum required version 18"
+    },
+    {
+      "name": "npm-runtime",
+      "ok": true,
+      "detail": "npm 10.8.2 is available"
+    },
+    {
+      "name": "playwright-dependency",
+      "ok": true,
+      "detail": "@playwright/test is installed in e2e/node_modules"
+    },
+    {
+      "name": "service-eureka",
+      "ok": true,
+      "detail": "Eureka service discovery dashboard is reachable at http://localhost:8761"
+    },
+    {
+      "name": "service-api-gateway",
+      "ok": true,
+      "detail": "API gateway is reachable at http://localhost:8081"
+    },
+    {
+      "name": "service-products",
+      "ok": true,
+      "detail": "Products microservice is reachable at http://localhost:8082"
+    },
+    {
+      "name": "service-cart",
+      "ok": false,
+      "detail": "Cart microservice is not reachable at http://localhost:8083"
+    },
+    {
+      "name": "service-checkout",
+      "ok": true,
+      "detail": "Checkout microservice is reachable at http://localhost:8086"
+    },
+    {
+      "name": "service-react-ui",
+      "ok": true,
+      "detail": "Spring Boot React UI wrapper is reachable at http://localhost:8080"
+    },
+    {
+      "name": "optional-service-login",
+      "ok": true,
+      "detail": "Login microservice (currently incomplete and excluded from the required regression baseline) is reachable at http://localhost:8085"
+    }
+  ],
+  "notes": [
+    "Data validation was skipped for the pre-reset bootstrap phase."
+  ]
+}

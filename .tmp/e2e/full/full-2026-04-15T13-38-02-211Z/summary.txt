@@ -1,0 +1,10 @@
+Yugastore E2E Scope Runner
+Scope: full
+Run ID: full-2026-04-15T13-38-02-211Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/full/full-2026-04-15T13-38-02-211Z
+
+FAIL: pre-reset-bootstrap - Runtime or service prerequisites failed before reset
+
+Notes:
+- See /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/full/full-2026-04-15T13-38-02-211Z/bootstrap-pre-reset-summary.json for the detailed bootstrap output.

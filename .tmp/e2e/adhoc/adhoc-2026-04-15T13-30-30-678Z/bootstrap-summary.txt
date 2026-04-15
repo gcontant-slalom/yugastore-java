@@ -1,0 +1,24 @@
+Yugastore E2E Bootstrap
+Scope: adhoc
+Run ID: adhoc-2026-04-15T13-30-30-678Z
+Status: FAIL
+Artifacts: /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/adhoc/adhoc-2026-04-15T13-30-30-678Z
+
+FAIL: java-runtime - Java 17+ is required
+PASS: node-runtime - Node v20.19.0 satisfies the minimum required version 18
+PASS: npm-runtime - npm 10.8.2 is available
+PASS: playwright-dependency - @playwright/test is installed in e2e/node_modules
+FAIL: service-eureka - Eureka service discovery dashboard is not reachable at http://localhost:8761
+FAIL: service-api-gateway - API gateway is not reachable at http://localhost:8081
+FAIL: service-products - Products microservice is not reachable at http://localhost:8082
+FAIL: service-cart - Cart microservice is not reachable at http://localhost:8083
+FAIL: service-checkout - Checkout microservice is not reachable at http://localhost:8086
+FAIL: service-react-ui - Spring Boot React UI wrapper is not reachable at http://localhost:8080
+PASS: optional-service-login - Login microservice (currently incomplete and excluded from the required regression baseline) is not running; this is expected for the current supported baseline
+PASS: database-mode - Using local ycqlsh/ysqlsh commands
+FAIL: ycql-products - products baseline mismatch: expected 6276, found 6029
+FAIL: ycql-product_rankings - product_rankings baseline mismatch: expected 6022, found 5788
+FAIL: ycql-product_inventory - product_inventory baseline mismatch: expected 6276, found 6029
+FAIL: ysql-shopping_cart - shopping_cart baseline query failed: ERROR:  relation "shopping_cart" does not exist
+LINE 1: SELECT count(*) FROM shopping_cart;
+                             ^

@@ -1,0 +1,15 @@
+{
+  "scope": "smoke",
+  "ok": false,
+  "command": "smoke",
+  "steps": [
+    {
+      "name": "pre-reset-bootstrap",
+      "ok": false,
+      "detail": "Runtime or service prerequisites failed before reset"
+    }
+  ],
+  "notes": [
+    "See /Users/slandizier/Documents/projects/yugastore-java/.tmp/e2e/smoke/smoke-2026-04-15T14-28-52-820Z/bootstrap-pre-reset-summary.json for the detailed bootstrap output."
+  ]
+}

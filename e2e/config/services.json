@@ -1,0 +1,73 @@
+{
+  "prerequisites": {
+    "javaMajorVersion": 17,
+    "nodeMajorVersion": 18,
+    "playwrightPackage": "@playwright/test"
+  },
+  "database": {
+    "dockerContainer": "yugastore-yb",
+    "ycql": {
+      "host": "127.0.0.1",
+      "port": 9042,
+      "keyspace": "cronos"
+    },
+    "ysql": {
+      "host": "127.0.0.1",
+      "port": 5433,
+      "database": "yugabyte"
+    }
+  },
+  "requiredServices": [
+    {
+      "id": "eureka",
+      "host": "127.0.0.1",
+      "port": 8761,
+      "url": "http://localhost:8761",
+      "description": "Eureka service discovery dashboard"
+    },
+    {
+      "id": "api-gateway",
+      "host": "127.0.0.1",
+      "port": 8081,
+      "url": "http://localhost:8081",
+      "description": "API gateway"
+    },
+    {
+      "id": "products",
+      "host": "127.0.0.1",
+      "port": 8082,
+      "url": "http://localhost:8082",
+      "description": "Products microservice"
+    },
+    {
+      "id": "cart",
+      "host": "127.0.0.1",
+      "port": 8083,
+      "url": "http://localhost:8083",
+      "description": "Cart microservice"
+    },
+    {
+      "id": "checkout",
+      "host": "127.0.0.1",
+      "port": 8086,
+      "url": "http://localhost:8086",
+      "description": "Checkout microservice"
+    },
+    {
+      "id": "react-ui",
+      "host": "127.0.0.1",
+      "port": 8080,
+      "url": "http://localhost:8080",
+      "description": "Spring Boot React UI wrapper"
+    }
+  ],
+  "optionalServices": [
+    {
+      "id": "login",
+      "host": "127.0.0.1",
+      "port": 8085,
+      "url": "http://localhost:8085",
+      "description": "Login microservice (currently incomplete and excluded from the required regression baseline)"
+    }
+  ]
+}
