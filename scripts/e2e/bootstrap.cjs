@@ -17,6 +17,68 @@ const {
   ysqlCommand
 } = require('./shared.cjs');
 
+const seedPrimaryKeyIndexes = {
+  products: [0],
+  product_rankings: [0, 1],
+  product_inventory: [0]
+};
+
+function parseCsvLine(line) {
+  const values = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const nextChar = line[index + 1];
+
+    if (inQuotes && char === '\\' && (nextChar === '"' || nextChar === '\\')) {
+      current += nextChar;
+      index += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      values.push(current);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current);
+  return values;
+}
+
+function countExpectedSeedRows(seed) {
+  const primaryKeyIndexes = seedPrimaryKeyIndexes[seed.table];
+  if (!primaryKeyIndexes) {
+    return countCsvRows(seed.file);
+  }
+
+  const sourcePath = path.join(repoRoot, seed.file);
+  const lines = fs.readFileSync(sourcePath, 'utf8').split(/\r?\n/).filter(Boolean);
+  const keys = new Set();
+
+  for (const line of lines) {
+    const values = parseCsvLine(line);
+    keys.add(primaryKeyIndexes.map((index) => values[index] || '').join('\u0000'));
+  }
+
+  return keys.size;
+}
+
 async function runBootstrap(options = {}) {
   const scope = options.scope || 'adhoc';
   const runContext = options.runContext || createRunContext(scope);
@@ -105,7 +167,8 @@ async function runBootstrap(options = {}) {
       for (const verification of baseline.ycql.verificationQueries) {
         const result = ycqlCommand(databaseMode, ['-e', verification.query]);
         const actualCount = result.status === 0 ? parseCount(result.stdout) : null;
-        const expectedCount = countCsvRows(verification.sourceFile);
+        const matchingSeed = baseline.ycql.seedData.find((seed) => seed.file === verification.sourceFile);
+        const expectedCount = matchingSeed ? countExpectedSeedRows(matchingSeed) : countCsvRows(verification.sourceFile);
         const ok = result.status === 0 && actualCount === expectedCount;
         steps.push({
           name: `ycql-${verification.name}`,

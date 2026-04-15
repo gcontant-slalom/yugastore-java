@@ -34,6 +34,28 @@ find_ycqlsh() {
   return 1
 }
 
+run_ycqlsh() {
+  local ycqlsh_bin="$1"
+  shift
+
+  local ycqlsh_dir ycqlsh_py
+  ycqlsh_dir="$(dirname "$ycqlsh_bin")"
+  ycqlsh_py="${ycqlsh_dir}/ycqlsh.py"
+
+  if [[ "$(uname -s)" == "Darwin" && -f "$ycqlsh_py" ]] && command -v python3 >/dev/null 2>&1; then
+    exec python3 -c 'import multiprocessing as mp, runpy, sys
+try:
+    mp.set_start_method("fork")
+except RuntimeError:
+    pass
+script_path = sys.argv[1]
+sys.argv = sys.argv[1:]
+runpy.run_path(script_path, run_name="__main__")' "$ycqlsh_py" "$@"
+  fi
+
+  exec "$ycqlsh_bin" "$@"
+}
+
 if [[ "${1:-}" == "--help" ]]; then
   cat <<'EOF'
 Usage: ./ycqlsh.sh [ycqlsh args]
@@ -63,4 +85,4 @@ EOF
   exit 1
 fi
 
-exec "$ycqlsh_bin" "$default_host" "$default_port" -k "$default_keyspace" "$@"
+run_ycqlsh "$ycqlsh_bin" "$default_host" "$default_port" -k "$default_keyspace" "$@"

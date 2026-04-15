@@ -10,8 +10,10 @@ import './index.css';
 class ShowProduct extends Component {
   state = {product_id: "", product: undefined, productAlsoBought: []}
 
+  routeProductId = () => this.props.match.params.asin || this.props.match.params.id
+
   componentDidMount() {
-    var new_product_id = this.props.match.params.id;
+    var new_product_id = this.routeProductId();
     this.fetchProductDetails(new_product_id)
   }
 
@@ -46,7 +48,7 @@ class ShowProduct extends Component {
   }
 
   render () {
-    var new_product_id = this.props.match.params.id;
+    var new_product_id = this.routeProductId();
     this.fetchProductDetails(new_product_id)
     const currentProduct = this.state.product;
     if (!currentProduct) {

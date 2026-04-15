@@ -41,6 +41,177 @@ function copyStatement(seed, sourcePath) {
   return `COPY ${seed.table} (${seed.columns}) FROM '${sourcePath}';`;
 }
 
+const ycqlDropStatements = [
+  'DROP INDEX IF EXISTS cronos.top_products_in_category;',
+  'DROP TABLE IF EXISTS cronos.product_rankings;',
+  'DROP TABLE IF EXISTS cronos.product_inventory;',
+  'DROP TABLE IF EXISTS cronos.orders;',
+  'DROP TABLE IF EXISTS cronos.products;'
+];
+
+const localSeedColumnConfigs = {
+  products: {
+    columns: ['asin', 'title', 'description', 'price', 'imurl', 'brand', 'num_reviews', 'num_stars', 'avg_stars'],
+    sourceIndexes: [0, 1, 2, 3, 4, 9, 11, 12, 13],
+    types: ['text', 'text', 'text', 'double', 'text', 'text', 'int', 'double', 'double']
+  },
+  product_rankings: {
+    columns: ['asin', 'category', 'sales_rank', 'title', 'price', 'imurl', 'num_reviews', 'num_stars', 'avg_stars'],
+    sourceIndexes: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    types: ['text', 'text', 'int', 'text', 'double', 'text', 'int', 'double', 'double']
+  },
+  product_inventory: {
+    columns: ['asin', 'quantity'],
+    sourceIndexes: [0, 1],
+    types: ['text', 'int']
+  }
+};
+
+const seedPrimaryKeyIndexes = {
+  products: [0],
+  product_rankings: [0, 1],
+  product_inventory: [0]
+};
+
+function parseCsvLine(line) {
+  const values = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const nextChar = line[index + 1];
+
+    if (inQuotes && char === '\\' && (nextChar === '"' || nextChar === '\\')) {
+      current += nextChar;
+      index += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      values.push(current);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current);
+  return values;
+}
+
+function splitCollection(value) {
+  if (!value) {
+    return [];
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length < 2) {
+    return [];
+  }
+
+  const inner = trimmed.slice(1, -1).trim();
+  if (!inner) {
+    return [];
+  }
+
+  return inner.split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function escapeCqlString(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function toCqlLiteral(value, type) {
+  if (type === 'text') {
+    return escapeCqlString(value || '');
+  }
+
+  if (type === 'int' || type === 'double') {
+    return value === '' ? '0' : value;
+  }
+
+  if (type === 'list<text>') {
+    if (!value) {
+      return 'null';
+    }
+    const items = splitCollection(value).map(escapeCqlString);
+    return `[${items.join(', ')}]`;
+  }
+
+  if (type === 'set<text>') {
+    if (!value) {
+      return 'null';
+    }
+    const items = splitCollection(value).map(escapeCqlString);
+    return `{${items.join(', ')}}`;
+  }
+
+  return 'null';
+}
+
+function buildInsertStatements(seed) {
+  const sourcePath = path.join(repoRoot, seed.file);
+  const lines = fs.readFileSync(sourcePath, 'utf8').split(/\r?\n/).filter(Boolean);
+  const config = localSeedColumnConfigs[seed.table];
+
+  if (!config || config.columns.length !== config.types.length || config.columns.length !== config.sourceIndexes.length) {
+    throw new Error(`No local seed type mapping is defined for ${seed.table}`);
+  }
+
+  return lines.map((line) => {
+    const values = parseCsvLine(line);
+    const maxSourceIndex = Math.max(...config.sourceIndexes);
+    if (values.length <= maxSourceIndex) {
+      throw new Error(`Unable to parse ${seed.file}: expected at least ${maxSourceIndex + 1} columns for ${seed.table}, found ${values.length}`);
+    }
+
+    const cqlValues = config.sourceIndexes.map((sourceIndex, index) => toCqlLiteral(values[sourceIndex], config.types[index]));
+    return `INSERT INTO ${seed.table} (${config.columns.join(', ')}) VALUES (${cqlValues.join(', ')});`;
+  });
+}
+
+function countExpectedSeedRows(seed) {
+  const primaryKeyIndexes = seedPrimaryKeyIndexes[seed.table];
+  if (!primaryKeyIndexes) {
+    return countCsvRows(seed.file);
+  }
+
+  const sourcePath = path.join(repoRoot, seed.file);
+  const lines = fs.readFileSync(sourcePath, 'utf8').split(/\r?\n/).filter(Boolean);
+  const keys = new Set();
+
+  for (const line of lines) {
+    const values = parseCsvLine(line);
+    keys.add(primaryKeyIndexes.map((index) => values[index] || '').join('\u0000'));
+  }
+
+  return keys.size;
+}
+
+function runLocalInsertFallback(databaseMode, seed) {
+  const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'yugastore-e2e-'));
+  const tempFile = path.join(tempDirectory, `${seed.name}-insert.cql`);
+
+  try {
+    fs.writeFileSync(tempFile, `${buildInsertStatements(seed).join('\n')}\n`);
+    return ycqlCommand(databaseMode, ['-f', tempFile]);
+  } finally {
+    fs.rmSync(tempDirectory, { recursive: true, force: true });
+  }
+}
+
 function runSeedCommand(databaseMode, statement) {
   if (databaseMode.kind === 'docker') {
     return ycqlCommand(databaseMode, ['-f', '-'], { input: statement });
@@ -101,6 +272,16 @@ async function runReset(options = {}) {
   try {
     const ycqlSchemaPath = path.join(repoRoot, baseline.ycql.schemaFile);
     const ycqlSchema = fs.readFileSync(ycqlSchemaPath, 'utf8');
+
+    for (const statement of ycqlDropStatements) {
+      runOrThrow(ycqlCommand(databaseMode, ['-e', statement]), `Unable to execute YCQL drop statement: ${statement}`);
+    }
+    steps.push({
+      name: 'drop-ycql-objects',
+      ok: true,
+      detail: `Dropped ${ycqlDropStatements.length} YCQL objects before schema reapply`
+    });
+
     const ycqlSchemaResult = databaseMode.kind === 'docker'
       ? ycqlCommand(databaseMode, ['-f', '-'], { input: ycqlSchema })
       : ycqlCommand(databaseMode, ['-f', ycqlSchemaPath]);
@@ -160,7 +341,13 @@ async function runReset(options = {}) {
           })()
         : path.join(repoRoot, seed.file);
 
-      runOrThrow(runSeedCommand(databaseMode, copyStatement(seed, sourcePath)), `Unable to load ${seed.file} into ${seed.table}`);
+      const seedResult = runSeedCommand(databaseMode, copyStatement(seed, sourcePath));
+      if (seedResult.status !== 0 && databaseMode.kind === 'local-cli') {
+        const fallbackResult = runLocalInsertFallback(databaseMode, seed);
+        runOrThrow(fallbackResult, `Unable to load ${seed.file} into ${seed.table}`);
+      } else {
+        runOrThrow(seedResult, `Unable to load ${seed.file} into ${seed.table}`);
+      }
       steps.push({
         name: `seed-${seed.name}`,
         ok: true,
@@ -171,7 +358,8 @@ async function runReset(options = {}) {
     for (const verification of baseline.ycql.verificationQueries) {
       const result = ycqlCommand(databaseMode, ['-e', verification.query]);
       const actualCount = parseCount(result.stdout);
-      const expectedCount = countCsvRows(verification.sourceFile);
+      const matchingSeed = baseline.ycql.seedData.find((seed) => seed.file === verification.sourceFile);
+      const expectedCount = matchingSeed ? countExpectedSeedRows(matchingSeed) : countCsvRows(verification.sourceFile);
       const ok = result.status === 0 && actualCount === expectedCount;
       steps.push({
         name: `verify-${verification.name}`,
