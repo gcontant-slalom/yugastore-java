@@ -10,6 +10,7 @@ import com.yugabyte.app.yugastore.service.AuthProxyException;
 import com.yugabyte.app.yugastore.domain.AuthLoginRequest;
 import com.yugabyte.app.yugastore.domain.AuthRegistrationRequest;
 import com.yugabyte.app.yugastore.domain.AuthUser;
+import com.yugabyte.app.yugastore.domain.MerchantSignupResponse;
 import com.yugabyte.app.yugastore.rest.clients.AuthRestClient;
 import feign.FeignException;
 import feign.Request;
@@ -17,6 +18,7 @@ import feign.RequestTemplate;
 import feign.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -101,8 +103,32 @@ class AuthServiceRestImplTest {
         verify(authRestClient).login(request);
     }
 
-        @Test
-        void register_preservesValidationErrorsFromDownstreamService() {
+    @Test
+    void currentMerchantContext_usesAuthenticatedUserId() {
+        MerchantSignupResponse response = new MerchantSignupResponse();
+        response.setTenantKey("northwind-books");
+
+        when(authRestClient.getMerchantContext("9")).thenReturn(response);
+
+        assertThat(service.currentMerchantContext("9").getTenantKey()).isEqualTo("northwind-books");
+    }
+
+    @Test
+    void currentMerchantContexts_usesAuthenticatedUserId() {
+        MerchantSignupResponse firstResponse = new MerchantSignupResponse();
+        firstResponse.setTenantKey("northwind-books");
+        MerchantSignupResponse secondResponse = new MerchantSignupResponse();
+        secondResponse.setTenantKey("northwind-music");
+
+        when(authRestClient.getMerchantContexts("9")).thenReturn(List.of(firstResponse, secondResponse));
+
+        assertThat(service.currentMerchantContexts("9"))
+                .extracting(MerchantSignupResponse::getTenantKey)
+                .containsExactly("northwind-books", "northwind-music");
+    }
+
+    @Test
+    void register_preservesValidationErrorsFromDownstreamService() {
         AuthRegistrationRequest request = new AuthRegistrationRequest();
         request.setEmail("merchant@example.com");
         request.setPassword("test123");
@@ -133,5 +159,5 @@ class AuthServiceRestImplTest {
                 assertThat(authProxyException.getErrorResponse().getFieldErrors())
                     .containsEntry("password", "Try one with at least 8 characters.");
             });
-        }
+    }
 }

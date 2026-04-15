@@ -1,7 +1,7 @@
 // Dependencies
 import React, { Component } from 'react';
 import { Logo } from '../';
-import { Icon } from "../../../common";
+import { Icon } from '../../../common';
 import { NavLink, withRouter } from 'react-router-dom';
 // Internals
 import './index.css';
@@ -24,7 +24,7 @@ class Navbar extends Component {
   }
 
   render() {
-    const { match, location, history } = this.props
+    const { location } = this.props;
     const notIndex = location.pathname!=="/";
     const currentUser = this.props.currentUser;
     return(
@@ -54,13 +54,14 @@ class Navbar extends Component {
       </div>
       <div className='nav-cart'>
         <NavLink className={`${this.props.cart.total ? 'nav-cart-active' : '' }`} to="/cart">
-          {this.props.cart.total > 0 && <span className={`nav-cart-count ${this.props.cart.error ? "nav-cart-count-error": ""}`}>{this.props.cart.total}</span>}
+          {this.props.cart.total > 0 && <span className={`nav-cart-count ${this.props.cart.error ? 'nav-cart-count-error': ''}`}>{this.props.cart.total}</span>}
           <Icon icon="cart" color={this.props.scrolled || notIndex ? '#000000' : '#ffffff' }/>Cart
         </NavLink>
       </div>
       <div className='nav-auth'>
         {currentUser ? (
           <div className="nav-auth-state">
+            <NavLink className="nav-auth-link" to="/merchant/signup">Merchant Setup</NavLink>
             <span className="nav-auth-user">{currentUser.email}</span>
             <button className="nav-auth-action" onClick={this.props.onLogout}>Logout</button>
           </div>

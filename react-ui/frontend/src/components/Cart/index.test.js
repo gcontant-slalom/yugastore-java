@@ -50,6 +50,7 @@ describe('Cart', () => {
         <MemoryRouter>
           <Cart
             cart={{ data: { 'sku-1': 2 }, total: 2 }}
+            currentUser={{ userId: '42', email: 'shopper@example.com' }}
             fetchCart={jest.fn()}
             removeItemFromCart={removeItemFromCart}
           />
@@ -80,6 +81,7 @@ describe('Cart', () => {
         <MemoryRouter>
           <Cart
             cart={{ data: { 'sku-1': 2 }, total: 2 }}
+            currentUser={{ userId: '42', email: 'shopper@example.com' }}
             fetchCart={fetchCart}
             removeItemFromCart={jest.fn()}
           />
@@ -110,6 +112,7 @@ describe('Cart', () => {
         <MemoryRouter>
           <Cart
             cart={{ data: {}, total: 0 }}
+            currentUser={{ userId: '42', email: 'shopper@example.com' }}
             fetchCart={jest.fn()}
             removeItemFromCart={jest.fn()}
           />

@@ -82,6 +82,11 @@
   color: #60727d;
 }
 
+.auth-switch-top {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
 .auth-switch a {
   color: #2bb2ac;
   font-weight: 600;

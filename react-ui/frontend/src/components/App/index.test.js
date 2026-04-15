@@ -88,6 +88,64 @@ describe('App', () => {
     expect(container.textContent).toContain('footer');
   });
 
+  it('rehydrates merchant context on bootstrap when current user is authenticated', async () => {
+    const app = new App({});
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' })) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({})) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify([{ tenantId: '8', tenantKey: 'northwind-books', companyName: 'Northwind Books' }, { tenantId: '9', tenantKey: 'northwind-music', companyName: 'Northwind Music' }])) }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    await app.fetchCurrentUser();
+    await flushMicrotasks();
+
+    expect(app.state.merchantContexts).toHaveLength(2);
+    expect(app.state.merchantContext).toEqual({ tenantId: '9', tenantKey: 'northwind-music', companyName: 'Northwind Music' });
+  });
+
+  it('rehydrates merchant context after login', async () => {
+    const app = new App({});
+    global.fetch = jest.fn()
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' })) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({})) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify([{ tenantId: '8', tenantKey: 'northwind-books', companyName: 'Northwind Books' }, { tenantId: '9', tenantKey: 'northwind-music', companyName: 'Northwind Music' }])) }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    await app.login({ email: 'merchant@example.com', password: 'password123' });
+    await flushMicrotasks();
+
+    expect(app.state.currentUser.email).toBe('merchant@example.com');
+    expect(app.state.merchantContexts).toHaveLength(2);
+    expect(app.state.merchantContext.tenantKey).toBe('northwind-music');
+  });
+
+  it('clears merchant context when no tenant is linked to the user', async () => {
+    const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
+    app.state.merchantContexts = [{ tenantKey: 'old-tenant' }];
+    app.state.merchantContext = { tenantKey: 'old-tenant' };
+    global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 404, text: () => Promise.resolve(JSON.stringify({ message: 'No merchant tenant is linked to this account.' })) }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    await app.fetchMerchantContexts();
+    await flushMicrotasks();
+
+    expect(app.state.merchantContexts).toEqual([]);
+    expect(app.state.merchantContext).toBeNull();
+  });
+
   it('renders the cart route when navigating to /cart', async () => {
     await act(async () => {
       ReactDOM.render(
@@ -178,6 +236,7 @@ describe('App', () => {
     global.fetch = jest.fn()
       .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ userId: '42', email: 'merchant@example.com' })) }))
       .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ 'sku-1': '1' })) }))
+      .mockImplementationOnce(() => Promise.resolve({ ok: false, status: 404, text: () => Promise.resolve(JSON.stringify({ message: 'No merchant tenant is linked to this account.' })) }))
       .mockImplementationOnce(() => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({})) }));
 
     await act(async () => {
@@ -199,6 +258,28 @@ describe('App', () => {
 
     expect(global.fetch).toHaveBeenCalledWith('/cart/remove/?asin=sku-1', expect.objectContaining({ method: 'POST' }));
     expect(container.textContent).toContain('navbar-0-false-false-merchant@example.com');
+  });
+
+  it('stores a newly created merchant tenant in the visible tenant list', async () => {
+    const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
+    app.state.merchantContexts = [{ tenantId: '8', tenantKey: 'northwind-books', companyName: 'Northwind Books' }];
+    global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ tenantId: '9', tenantKey: 'northwind-music', companyName: 'Northwind Music' }))
+    }));
+
+    app.setState = jest.fn(update => {
+      const nextState = typeof update === 'function' ? update(app.state) : update;
+      app.state = { ...app.state, ...nextState };
+    });
+
+    await app.createMerchantSignup({ companyName: 'Northwind Music', tenantKey: 'northwind-music' });
+    await flushMicrotasks();
+
+    expect(app.state.merchantContexts).toHaveLength(2);
+    expect(app.state.merchantContext.tenantKey).toBe('northwind-music');
   });
 
   it('sets and clears the cart error flag when add to cart fails', async () => {
@@ -237,6 +318,7 @@ describe('App', () => {
 
   it('fetchCart calculates the total and clears cart errors', async () => {
     const app = new App({});
+    app.state.currentUser = { userId: '42', email: 'merchant@example.com' };
     global.fetch = jest.fn(() => Promise.resolve({
       ok: true,
       status: 200,

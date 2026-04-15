@@ -5,11 +5,14 @@ import com.yugabyte.app.yugastore.domain.AuthErrorResponse;
 import com.yugabyte.app.yugastore.domain.AuthLoginRequest;
 import com.yugabyte.app.yugastore.domain.AuthRegistrationRequest;
 import com.yugabyte.app.yugastore.domain.AuthUser;
+import com.yugabyte.app.yugastore.domain.MerchantSignupRequest;
+import com.yugabyte.app.yugastore.domain.MerchantSignupResponse;
 import com.yugabyte.app.yugastore.rest.clients.AuthRestClient;
 import com.yugabyte.app.yugastore.service.AuthProxyException;
 import com.yugabyte.app.yugastore.service.AuthServiceRest;
 import feign.FeignException;
 import java.io.IOException;
+import java.util.List;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpStatus;
@@ -58,8 +61,73 @@ public class AuthServiceRestImpl implements AuthServiceRest {
     }
 
     @Override
+    public MerchantSignupResponse createMerchantSignup(MerchantSignupRequest request) {
+        AuthUser authenticatedUser = resolveAuthenticatedUser(request);
+        MerchantSignupRequest downstreamRequest = new MerchantSignupRequest();
+        downstreamRequest.setCompanyName(request.getCompanyName());
+        downstreamRequest.setTenantKey(request.getTenantKey());
+        downstreamRequest.setAuthenticatedUserId(authenticatedUser.getUserId());
+        downstreamRequest.setAuthenticatedUserEmail(authenticatedUser.getEmail());
+
+        try {
+            return authRestClient.createMerchantSignup(downstreamRequest);
+        } catch (FeignException ex) {
+            throw translateException(ex, HttpStatus.BAD_REQUEST, "Merchant signup request rejected.");
+        }
+    }
+
+    @Override
+    public MerchantSignupResponse currentMerchantContext() {
+        return currentMerchantContext(null);
+    }
+
+    @Override
+    public MerchantSignupResponse currentMerchantContext(String authenticatedUserId) {
+        AuthUser authenticatedUser = resolveAuthenticatedUser(authenticatedUserId);
+        try {
+            return authRestClient.getMerchantContext(authenticatedUser.getUserId());
+        } catch (FeignException ex) {
+            throw translateException(ex, HttpStatus.NOT_FOUND, "No merchant tenant is linked to this account.");
+        }
+    }
+
+    @Override
+    public List<MerchantSignupResponse> currentMerchantContexts() {
+        return currentMerchantContexts(null);
+    }
+
+    @Override
+    public List<MerchantSignupResponse> currentMerchantContexts(String authenticatedUserId) {
+        AuthUser authenticatedUser = resolveAuthenticatedUser(authenticatedUserId);
+        try {
+            return authRestClient.getMerchantContexts(authenticatedUser.getUserId());
+        } catch (FeignException ex) {
+            throw translateException(ex, HttpStatus.NOT_FOUND, "No merchant tenant is linked to this account.");
+        }
+    }
+
+    @Override
     public void logout() {
         currentUser = null;
+    }
+
+    private AuthUser resolveAuthenticatedUser(MerchantSignupRequest request) {
+        if (request.getAuthenticatedUserId() != null && !request.getAuthenticatedUserId().isBlank()) {
+            AuthUser authenticatedUser = new AuthUser();
+            authenticatedUser.setUserId(request.getAuthenticatedUserId());
+            authenticatedUser.setEmail(request.getAuthenticatedUserEmail());
+            return authenticatedUser;
+        }
+        return currentUser();
+    }
+
+    private AuthUser resolveAuthenticatedUser(String authenticatedUserId) {
+        if (authenticatedUserId != null && !authenticatedUserId.isBlank()) {
+            AuthUser authenticatedUser = new AuthUser();
+            authenticatedUser.setUserId(authenticatedUserId);
+            return authenticatedUser;
+        }
+        return currentUser();
     }
 
     private AuthProxyException translateException(FeignException ex, HttpStatus fallbackStatus,

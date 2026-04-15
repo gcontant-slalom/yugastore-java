@@ -1,6 +1,7 @@
 package com.yugabyte.yugastore.ui.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.yugabyte.yugastore.ui.model.AuthUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,8 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -94,6 +93,27 @@ public class CronosProductsController {
 		dashboardRestConsumer.logout();
 		session.removeAttribute(AUTH_USER_SESSION_KEY);
 		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping("/api/v1/merchant-signup")
+	public ResponseEntity<String> createMerchantSignup(@RequestBody String payload, HttpSession session) {
+		AuthUser authUser = requireAuthenticatedUser(session);
+		JsonObject requestBody = new Gson().fromJson(payload, JsonObject.class);
+		requestBody.addProperty("authenticatedUserId", authUser.getUserId());
+		requestBody.addProperty("authenticatedUserEmail", authUser.getEmail());
+		return dashboardRestConsumer.createMerchantSignup(requestBody.toString());
+	}
+
+	@GetMapping("/api/v1/merchant-context")
+	public ResponseEntity<String> getMerchantContext(HttpSession session) {
+		AuthUser authUser = requireAuthenticatedUser(session);
+		return dashboardRestConsumer.getMerchantContext(authUser.getUserId());
+	}
+
+	@GetMapping("/api/v1/merchant-context/list")
+	public ResponseEntity<String> getMerchantContexts(HttpSession session) {
+		AuthUser authUser = requireAuthenticatedUser(session);
+		return dashboardRestConsumer.getMerchantContexts(authUser.getUserId());
 	}
 
 	@GetMapping("/auth/current-user")

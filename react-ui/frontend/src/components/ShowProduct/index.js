@@ -16,10 +16,10 @@ class ShowProduct extends Component {
   }
 
   fetchProductDetails = (new_product_id) => {
-    if (new_product_id != undefined &&
-        this.state.product_id != undefined &&
-        new_product_id != this.state.product_id) {
-      this.state.product_id = "" + new_product_id;
+    if (new_product_id !== undefined &&
+        this.state.product_id !== undefined &&
+        new_product_id !== this.state.product_id) {
+      this.setState({ product_id: '' + new_product_id });
       var url = '/products/details?asin=' + new_product_id;
       console.log("Fetching url: " + url);
       fetch(url)

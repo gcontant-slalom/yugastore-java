@@ -1,5 +1,4 @@
 // Dependencies
-import _ from 'lodash';
 import React, { Component } from 'react';
 // Externals
 import Cart from '../Cart';
@@ -7,6 +6,7 @@ import ShowProduct from '../ShowProduct';
 import Products from '../Products';
 import Home from '../Home';
 import Auth from '../Auth';
+import MerchantSignup from '../MerchantSignup';
 import { Navbar, Footer, Subscribe } from '../Main/components';
 import { Route, Switch } from 'react-router-dom';
 import './index.css';
@@ -21,9 +21,13 @@ export default class App extends Component {
         total: 0
       },
       currentUser: null,
+      merchantContexts: [],
+      merchantContext: null,
       authLoaded: false,
       authPending: false,
       authMessage: '',
+      merchantSignupPending: false,
+      merchantSignupMessage: '',
       scrolled: false,
       index: 0,
     };
@@ -45,7 +49,7 @@ export default class App extends Component {
          x: supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft,
          y: supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop
       };
-  
+
       if(scroll.y > 50 && !this.state.scrolled){
         this.setState({
           scrolled: true
@@ -84,20 +88,50 @@ export default class App extends Component {
     return this.requestJson('/auth/current-user', { method: 'GET' })
       .then(currentUser => {
         this.setState({ currentUser, authLoaded: true, authMessage: '' });
-        return this.fetchCart(currentUser);
+        return Promise.all([this.fetchCart(), this.fetchMerchantContexts()]);
       })
       .catch(error => {
         if (error.status === 401) {
           this.setState({
             currentUser: null,
+            merchantContexts: [],
+            merchantContext: null,
             authLoaded: true,
             authPending: false,
             authMessage: '',
+            merchantSignupPending: false,
+            merchantSignupMessage: '',
             cart: { data: {}, total: 0, error: false }
           });
           return null;
         }
         this.setState({ authLoaded: true, authMessage: error.message });
+        return null;
+      });
+  }
+
+  fetchMerchantContexts = () => {
+    if (!this.state.currentUser) {
+      this.setState({ merchantContexts: [], merchantContext: null });
+      return Promise.resolve(null);
+    }
+
+    return this.requestJson('/api/v1/merchant-context/list', { method: 'GET' })
+      .then(merchantContexts => {
+        const tenantList = Array.isArray(merchantContexts) ? merchantContexts : [];
+        this.setState({
+          merchantContexts: tenantList,
+          merchantContext: tenantList.length > 0 ? tenantList[tenantList.length - 1] : null,
+          merchantSignupMessage: ''
+        });
+        return tenantList;
+      })
+      .catch(error => {
+        if (error.status === 404) {
+          this.setState({ merchantContexts: [], merchantContext: null });
+          return null;
+        }
+        this.setState({ merchantSignupMessage: error.message });
         return null;
       });
   }
@@ -142,8 +176,8 @@ export default class App extends Component {
       return;
     }
     if (product) {
-      console.log("Added to Cart "+product.title);
-      
+      console.log('Added to Cart '+product.title);
+
       const url = '/cart/add?asin='+(product.id.asin || product.id);
       this.requestJson(url, { method: 'POST' })
         .then(data => {
@@ -164,7 +198,7 @@ export default class App extends Component {
           this.setState({
             cart: { ...this.state.cart, error: true }
           });
-    
+
           setTimeout(() => this.setState({
             cart: { ...this.state.cart, error: false }
           }), 2500);
@@ -180,8 +214,8 @@ export default class App extends Component {
       return;
     }
     if (product) {
-      console.log("Removed from Cart "+product.title);
-      
+      console.log('Removed from Cart '+product.title);
+
       const url = '/cart/remove/?asin='+product.id;
       this.requestJson(url, { method: 'POST' })
         .then(data => {
@@ -202,7 +236,7 @@ export default class App extends Component {
           this.setState({
             cart: { ...this.state.cart, error: true }
           });
-    
+
           setTimeout(() => this.setState({
             cart: { ...this.state.cart, error: false }
           }), 2500);
@@ -218,8 +252,8 @@ export default class App extends Component {
       body: JSON.stringify(credentials)
     })
       .then(currentUser => {
-        this.setState({ currentUser, authPending: false, authMessage: '' });
-        return this.fetchCart();
+        this.setState({ currentUser, authPending: false, authMessage: '', merchantSignupMessage: '' });
+        return Promise.all([this.fetchCart(), this.fetchMerchantContexts()]);
       })
       .catch(error => {
         this.setState({ authPending: false, authMessage: error.message });
@@ -234,8 +268,8 @@ export default class App extends Component {
       body: JSON.stringify(payload)
     })
       .then(currentUser => {
-        this.setState({ currentUser, authPending: false, authMessage: '' });
-        return this.fetchCart();
+        this.setState({ currentUser, authPending: false, authMessage: '', merchantSignupMessage: '' });
+        return Promise.all([this.fetchCart(), this.fetchMerchantContexts()]);
       })
       .catch(error => {
         const fieldErrors = error.data && error.data.fieldErrors ? Object.values(error.data.fieldErrors) : [];
@@ -253,31 +287,54 @@ export default class App extends Component {
       .then(() => {
         this.setState({
           currentUser: null,
+          merchantContexts: [],
+          merchantContext: null,
           authPending: false,
           authMessage: '',
+          merchantSignupPending: false,
+          merchantSignupMessage: '',
           cart: { data: {}, total: 0, error: false }
         });
       });
   }
 
+  createMerchantSignup = payload => {
+    if (!this.state.currentUser) {
+      this.setState({ merchantSignupMessage: 'Please sign in before creating a merchant tenant.' });
+      return Promise.resolve(null);
+    }
+
+    this.setState({ merchantSignupPending: true, merchantSignupMessage: '' });
+    return this.requestJson('/api/v1/merchant-signup', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+      .then(merchantContext => {
+        this.setState(prevState => ({
+          merchantContexts: [...prevState.merchantContexts, merchantContext],
+          merchantContext,
+          merchantSignupPending: false,
+          merchantSignupMessage: ''
+        }));
+        return merchantContext;
+      })
+      .catch(error => {
+        this.setState({ merchantSignupPending: false, merchantSignupMessage: error.message });
+        return null;
+      });
+  }
+
   render() {
-    return(
-
+    return (
       <div>
-        <Navbar cart={this.state.cart} scrolled={this.state.scrolled} currentUser={this.state.currentUser} onLogout={this.logout} />
-        <Switch>
-          <Route exact path="/" 
-            render={(props) => (
-              <Home
-                addItemToCart={this.addItemToCart} />
-            )} />
-      
-          <Route path="/cart" 
-            render={(props) => (
-              <Cart
-                cart={this.state.cart} currentUser={this.state.currentUser} fetchCart={this.fetchCart} removeItemFromCart={this.removeItemFromCart}/>
-            )} />
+        <Navbar
+          scrolled={this.state.scrolled}
+          cart={this.state.cart}
+          currentUser={this.state.currentUser}
+          onLogout={this.logout} />
 
+        <Switch>
+          <Route exact path="/" render={() => <Home addItemToCart={this.addItemToCart} />} />
           <Route path="/login"
             render={(props) => (
               <Auth
@@ -287,7 +344,6 @@ export default class App extends Component {
                 authMessage={this.state.authMessage}
                 onLogin={this.login} />
             )} />
-
           <Route path="/register"
             render={(props) => (
               <Auth
@@ -297,52 +353,32 @@ export default class App extends Component {
                 authMessage={this.state.authMessage}
                 onRegister={this.register} />
             )} />
-      
-          <Route path="/Music"
+          <Route path="/merchant/signup"
             render={(props) => (
-              <Products
-                category="Music"
-                addItemToCart={this.addItemToCart} />
-            )} />
-          <Route path="/Books"
-            render={(props) => (
-              <Products
-                category={"Books"}
-                addItemToCart={this.addItemToCart} />
-            )} />
-          <Route path="/Beauty"
-            render={(props) => (
-              <Products
-                category={"Beauty"}
-                addItemToCart={this.addItemToCart} />
-            )} />
-          <Route path="/Electronics"
-            render={(props) => (
-              <Products
-                category={"Electronics"}
-                addItemToCart={this.addItemToCart} />
-            )} />
-          <Route exact path="/:category"
-            render={(props) => (
-              <Products
+              <MerchantSignup
                 {...props}
-                addItemToCart={this.addItemToCart} />
+                currentUser={this.state.currentUser}
+                pending={this.state.merchantSignupPending}
+                message={this.state.merchantSignupMessage}
+                merchantContexts={this.state.merchantContexts}
+                merchantContext={this.state.merchantContext}
+                onSubmit={this.createMerchantSignup} />
             )} />
-    
-          <Route path="/sort/:query"
-            render={(props) => (
-              <Products
-                sort={props.match.params.query}
-                addItemToCart={this.addItemToCart} />
-            )} />
-      
-          <Route exact path="/item/:id" render={(props) => (
-            <ShowProduct {...props} addItemToCart={this.addItemToCart}/>
-          )}/>
+          <Route path="/cart" render={() => (
+            <Cart
+              cart={this.state.cart}
+              currentUser={this.state.currentUser}
+              removeItemFromCart={this.removeItemFromCart}
+              fetchCart={this.fetchCart} />
+          )} />
+          <Route path="/item/:asin" render={(props) => <ShowProduct {...props} addItemToCart={this.addItemToCart} />} />
+          <Route path="/sort/:sort" render={(props) => <Products {...props} sort={props.match.params.sort} addItemToCart={this.addItemToCart} />} />
+          <Route exact path="/:category(Books|Music|Beauty|Electronics)" render={(props) => <Products {...props} category={props.match.params.category} addItemToCart={this.addItemToCart} />} />
+          <Route path="/:category" render={(props) => <Products {...props} addItemToCart={this.addItemToCart} />} />
         </Switch>
-        <Subscribe/>
+        <Subscribe />
         <Footer />
       </div>
-    )
+    );
   }
 }

@@ -161,6 +161,24 @@ public class DashboardRestConsumer {
 		return exchange(restURL, HttpMethod.POST, request);
 	}
 
+	public ResponseEntity<String> createMerchantSignup(String payload) {
+		String restURL = restUrlBase + "merchant-signup";
+		HttpEntity<String> request = new HttpEntity<String>(payload, buildHeaders(null, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.POST, request);
+	}
+
+	public ResponseEntity<String> getMerchantContext(String userId) {
+		String restURL = restUrlBase + "merchant-context";
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.GET, request);
+	}
+
+	public ResponseEntity<String> getMerchantContexts(String userId) {
+		String restURL = restUrlBase + "merchant-context/list";
+		HttpEntity<Void> request = new HttpEntity<Void>(buildHeaders(userId, MediaType.APPLICATION_JSON));
+		return exchange(restURL, HttpMethod.GET, request);
+	}
+
 	private HttpHeaders buildHeaders(String userId, MediaType contentType) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
