@@ -70,9 +70,10 @@ public class CheckoutServiceImpl {
 			double orderTotal = getTotal(products);
 			orderDetails.append(" Order Total is : " + orderTotal);
 			currentOrder = createOrder(userId, orderDetails.toString(), orderTotal);
+			String escapedOrderDetails = escapeCqlLiteral(currentOrder.getOrder_details());
 			updateCartpreparedStatement
 					.append(" INSERT INTO orders (order_id, user_id, order_details, order_time, order_total) VALUES ("
-							+ "'" + currentOrder.getId() + "', '" + currentOrder.getUser_id() + "', '" + currentOrder.getOrder_details()
+							+ "'" + currentOrder.getId() + "', '" + currentOrder.getUser_id() + "', '" + escapedOrderDetails
 							+ "', '" + currentOrder.getOrder_time() + "'," + currentOrder.getOrder_total() + ");");
 			updateCartpreparedStatement.append(" END TRANSACTION;");
 			System.out.println("Statemet is " + updateCartpreparedStatement.toString());
@@ -105,6 +106,10 @@ public class CheckoutServiceImpl {
 		order.setOrder_time(currentTime.toString());
 		order.setOrder_total(orderTotal);
 		return order;
+	}
+
+	private String escapeCqlLiteral(String value) {
+		return value == null ? "" : value.replace("'", "''");
 	}
 
 }

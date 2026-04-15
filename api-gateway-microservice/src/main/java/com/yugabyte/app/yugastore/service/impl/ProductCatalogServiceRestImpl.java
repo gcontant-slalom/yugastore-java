@@ -8,6 +8,8 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.WebApplicationContext;
 
+import feign.FeignException;
+
 import com.yugabyte.app.yugastore.domain.ProductMetadata;
 import com.yugabyte.app.yugastore.domain.ProductRanking;
 import com.yugabyte.app.yugastore.rest.clients.ProductCatalogRestClient;
@@ -26,8 +28,11 @@ public class ProductCatalogServiceRestImpl implements ProductCatalogServiceRest 
 
   @Override
   public ProductMetadata getProductDetails(String asin) {
-    ProductMetadata result = productCatalogRestClient.getProductDetails(asin);
-    return result;
+    try {
+      return productCatalogRestClient.getProductDetails(asin);
+    } catch (FeignException.NotFound ex) {
+      return null;
+    }
   }
 
   @Override

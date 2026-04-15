@@ -76,12 +76,11 @@ public class DashboardRestConsumer {
 	public String getProductDetails(String asin) {
 
 		String restURL = restUrlBase + "product/" + asin;
-		ResponseEntity<String> rateResponse =
-		  restTemplate.exchange(
-		  	restURL,
-				HttpMethod.GET, null, String.class);
-		String productDetailsJsonResponse = rateResponse.getBody();
-		return productDetailsJsonResponse;
+		ResponseEntity<String> response = exchange(restURL, HttpMethod.GET, null);
+		if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+			return response.getBody();
+		}
+		return "{}";
 	}	
 
 	public String addProductToCart(String asin) {
